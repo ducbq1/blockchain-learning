@@ -1,0 +1,27 @@
+Công nghệ Blockchain tương đồng với có sở dữ liệu, chỉ khác ở việc tương tác với cơ sở dữ liệu. Để hiểu blockchain, cần nắm được năm định nghĩa sau: chuỗi khối (Blockchain), cơ chế đồng thuận phân tán đồng đẳng (Distributed), tính toán tin cậy (Trusted computing), hợp đồng thông minh (Smart contracts) và bằng chứng công việc (Proof of work). Mô hình tính toán này là nền tảng của việc tạo ra các ứng dụng phân tán.
+
+- Cơ chế đồng thuận phân tán đồng đẳng (Hay còn gọi là cơ chế đồng thuận phân quyền)
+- Chuỗi khối và dịch vụ chuỗi khối
+
+
+ERC20 là một tiêu chuẩn kỹ thuật được sử dụng cho các hợp đồng thông minh trên Ethereum Blockchain khi phát hành Token. ERC20 là viết tắt của Ethereum Request for Comments
+
+totalSupply
+function totalSupply() public view returns (uint256): trả về tổng nguồn cung token mà hợp đồng nắm giữ
+
+
+balanceOf
+function balanceOf(address _owner) public view returns (uint256 balance): trả về số dư token mà địa chỉ đó đang nắm giữ. Hãy nhớ rằng các tài khoản trên mạng Ethereum là công khai, vì vậy bạn có thể truy vấn số dư của bất kỳ người dùng nào mà bạn biết địa chỉ.
+
+
+transfer
+function transfer(address _to, uint256 _value) public returns (bool success): chuyển token từ người dùng này sang người dùng khác. Tại đây, bạn cung cấp địa chỉ muốn gửi và số tiền cần chuyển. Khi tính năng được gọi, transfer sẽ kích hoạt một thứ gọi là event.
+
+transferFrom
+function tranferFrom(address _from, address _to, uint255 _value) public returns (bool success): thay thế tiện dụng hơn so với chức năng transfer. Nó cho phép lập trình nhiều hơn một chút trong các ứng dụng phi tập trung. Chuyển token, nhưng những token đó không nhất thiết phải thuộc về người gọi hợp đồng.
+
+approve
+function approve(address _spender, uint256 _value) public returns (bool success): là một chức năng hữu ích và có nhiều hướng để lập trình. Với chức năng này, bạn có thể giới hạn số lượng token mà một hợp đồng thông minh có thể rút từ số dư của bạn. Nếu không có nó, bạn phải đối mặt với nguy cơ hợp đồng bị trục trặc (hoặc bị lợi dụng). Sẽ kích hoạt sự kiện approval, ghi dữ liệu vào blockchain.
+
+allowance
+function allowance(address _owner, address _spender) public view returns (uint256 remaining): có thể sử dụng cùng với appove. Khi bạn đã cho phép hợp đồng quản lý các token của mình, bạn có thể sử dụng quyền này để kiểm tra xem nó vẫn có thể rút được bao nhiêu tiền. Ví dụ, nếu gói đăng ký của bạn đã sử dụng hết 12/20 token chấp thuận, thì việc gọi hàm allowance sẽ trả về tổng số là 8.

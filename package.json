@@ -1,21 +1,5 @@
 {
   "dependencies": {
-    "crypto-js": "^4.1.1",
-    "fastify": "^3.21.3"
-  },
-  "name": "blockchain-theory",
-  "version": "1.0.0",
-  "main": "server.js",
-  "devDependencies": {},
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
-  },
-  "keywords": [
-    "blockchain"
-  ],
-  "type": "module",
-  "author": "duckiller",
-  "license": "ISC",
-  "description": ""
+    "@truffle/hdwallet-provider": "^1.5.1"
+  }
 }
