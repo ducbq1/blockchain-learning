@@ -1,0 +1,159 @@
+{
+	"compiler": {
+		"version": "0.8.7+commit.e28d00a7"
+	},
+	"language": "Solidity",
+	"output": {
+		"abi": [
+			{
+				"inputs": [],
+				"name": "AA",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "BB",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "GX",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "GY",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "PP",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "privKey",
+						"type": "uint256"
+					}
+				],
+				"name": "derivePubKey",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "pure",
+				"type": "function"
+			}
+		],
+		"devdoc": {
+			"author": "Witnet Foundation",
+			"kind": "dev",
+			"methods": {
+				"derivePubKey(uint256)": {
+					"params": {
+						"privKey": "The private key"
+					},
+					"returns": {
+						"_0": "(qx, qy) The Public Key"
+					}
+				}
+			},
+			"title": "Secp256k1 Elliptic Curve",
+			"version": 1
+		},
+		"userdoc": {
+			"kind": "user",
+			"methods": {
+				"derivePubKey(uint256)": {
+					"notice": "Public Key derivation from private key Warning: this is just an example. Do not expose your private key."
+				}
+			},
+			"notice": "Example of particularization of Elliptic Curve for secp256k1 curve",
+			"version": 1
+		}
+	},
+	"settings": {
+		"compilationTarget": {
+			"contracts/Secp256k1.sol": "Secp256k1"
+		},
+		"evmVersion": "london",
+		"libraries": {},
+		"metadata": {
+			"bytecodeHash": "ipfs"
+		},
+		"optimizer": {
+			"enabled": false,
+			"runs": 200
+		},
+		"remappings": []
+	},
+	"sources": {
+		"contracts/EllipticCurve.sol": {
+			"keccak256": "0x76a1c22fef039231ca59e26ddebb790609927f0be102dba1d55b2daed0c16436",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://f92363bbac173a34afeb027a66ad6d8b72dfa1dacd992844c9a4bc43187fd6d6",
+				"dweb:/ipfs/QmQqjDtUcpfDbKGm2QZSXAk418Tnjo8R6xhkDQQoSh6yAP"
+			]
+		},
+		"contracts/Secp256k1.sol": {
+			"keccak256": "0x8b17bf839d0c167591263c0a3f386a75c45587d056897254285f437af735e8eb",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://5fcea18c786c5a09aba06ce7fc465321261d667c94d693bf8cf57255eff06bd1",
+				"dweb:/ipfs/QmdToB6p6ABKMZSL6dM926T55oSzWTuzvgeLCiQoRtAp1s"
+			]
+		}
+	},
+	"version": 1
+}

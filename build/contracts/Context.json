@@ -10,7 +10,7 @@
   "sourceMap": "",
   "deployedSourceMap": "",
   "source": "// SPDX-License-Identifier: MIT\n\npragma solidity >=0.7.0 <0.9.0;\n\nabstract contract Context {\n    function _msgSender() internal view virtual returns (address) {\n        return msg.sender;\n    }\n\n    function _msgData() internal view virtual returns (bytes calldata) {\n        return msg.data;\n    }\n}\n",
-  "sourcePath": "/run/media/happyperson/Source/blockchain-graduation/contracts/Context.sol",
+  "sourcePath": "/run/media/happyperson/Source/blockchain-theory/contracts/Context.sol",
   "ast": {
     "absolutePath": "project:/contracts/Context.sol",
     "exportedSymbols": {
@@ -487,7 +487,7 @@
   },
   "networks": {},
   "schemaVersion": "3.4.3",
-  "updatedAt": "2021-10-19T04:17:06.389Z",
+  "updatedAt": "2021-10-19T12:18:19.939Z",
   "devdoc": {
     "kind": "dev",
     "methods": {},

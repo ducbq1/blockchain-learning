@@ -142,7 +142,7 @@ contract ERC20 is Context, IERC20 {
         unchecked {
             _balances[sender] = senderBalance - amount;
         }
-        
+
         _balances[recipient] += amount;
 
         emit Transfer(sender, recipient, amount);
