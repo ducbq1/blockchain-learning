@@ -1,14 +1,10 @@
-pragma solidity ^0.4.22;
+// SPDX-License-Identifier: MIT
 
-import './ERC725.sol';
+pragma solidity >=0.4.22 <0.9.0;
 
-// **Warning!** This file is a protoype version of our work around ERC 725.
-// This file is now out of date and **should not be used**.
-// Our current identity contracts are here:
-// https://github.com/OriginProtocol/origin/tree/master/origin-contracts/contracts/identity
+import "./ERC725.sol";
 
 contract KeyHolder is ERC725 {
-
     uint256 executionNonce;
 
     struct Execution {
@@ -19,14 +15,19 @@ contract KeyHolder is ERC725 {
         bool executed;
     }
 
-    mapping (bytes32 => Key) keys;
-    mapping (uint256 => bytes32[]) keysByPurpose;
-    mapping (uint256 => Execution) executions;
+    mapping(bytes32 => Key) keys;
+    mapping(uint256 => bytes32[]) keysByPurpose;
+    mapping(uint256 => Execution) executions;
 
-    event ExecutionFailed(uint256 indexed executionId, address indexed to, uint256 indexed value, bytes data);
+    event ExecutionFailed(
+        uint256 indexed executionId,
+        address indexed to,
+        uint256 indexed value,
+        bytes data
+    );
 
-    function KeyHolder() public {
-        bytes32 _key = keccak256(msg.sender);
+    constructor() {
+        bytes32 _key = keccak256(abi.encodePacked(msg.sender));
         keys[_key].key = _key;
         keys[_key].purpose = 1;
         keys[_key].keyType = 1;
@@ -37,7 +38,12 @@ contract KeyHolder is ERC725 {
     function getKey(bytes32 _key)
         public
         view
-        returns(uint256 purpose, uint256 keyType, bytes32 key)
+        override
+        returns (
+            uint256 purpose,
+            uint256 keyType,
+            bytes32 key
+        )
     {
         return (keys[_key].purpose, keys[_key].keyType, keys[_key].key);
     }
@@ -45,7 +51,8 @@ contract KeyHolder is ERC725 {
     function getKeyPurpose(bytes32 _key)
         public
         view
-        returns(uint256 purpose)
+        override
+        returns (uint256 purpose)
     {
         return (keys[_key].purpose);
     }
@@ -53,18 +60,23 @@ contract KeyHolder is ERC725 {
     function getKeysByPurpose(uint256 _purpose)
         public
         view
-        returns(bytes32[] _keys)
+        override
+        returns (bytes32[] memory _keys)
     {
         return keysByPurpose[_purpose];
     }
 
-    function addKey(bytes32 _key, uint256 _purpose, uint256 _type)
-        public
-        returns (bool success)
-    {
+    function addKey(
+        bytes32 _key,
+        uint256 _purpose,
+        uint256 _type
+    ) public override returns (bool success) {
         require(keys[_key].key != _key, "Key already exists"); // Key should not already exist
         if (msg.sender != address(this)) {
-          require(keyHasPurpose(keccak256(msg.sender), 1), "Sender does not have management key"); // Sender has MANAGEMENT_KEY
+            require(
+                keyHasPurpose(keccak256(abi.encodePacked(msg.sender)), 1),
+                "Sender does not have management key"
+            ); // Sender has MANAGEMENT_KEY
         }
 
         keys[_key].key = _key;
@@ -80,15 +92,20 @@ contract KeyHolder is ERC725 {
 
     function approve(uint256 _id, bool _approve)
         public
+        override
         returns (bool success)
     {
-        require(keyHasPurpose(keccak256(msg.sender), 2), "Sender does not have action key");
+        require(
+            keyHasPurpose(keccak256(abi.encodePacked(msg.sender)), 2),
+            "Sender does not have action key"
+        );
 
         emit Approved(_id, _approve);
 
         if (_approve == true) {
             executions[_id].approved = true;
-            success = executions[_id].to.call(executions[_id].data, 0);
+            bytes memory _data;
+            (success, _data) = executions[_id].to.call(executions[_id].data);
             if (success) {
                 executions[_id].executed = true;
                 emit Executed(
@@ -97,7 +114,7 @@ contract KeyHolder is ERC725 {
                     executions[_id].value,
                     executions[_id].data
                 );
-                return;
+                return true;
             } else {
                 emit ExecutionFailed(
                     _id,
@@ -105,7 +122,7 @@ contract KeyHolder is ERC725 {
                     executions[_id].value,
                     executions[_id].data
                 );
-                return;
+                return true;
             }
         } else {
             executions[_id].approved = false;
@@ -113,10 +130,11 @@ contract KeyHolder is ERC725 {
         return true;
     }
 
-    function execute(address _to, uint256 _value, bytes _data)
-        public
-        returns (uint256 executionId)
-    {
+    function execute(
+        address _to,
+        uint256 _value,
+        bytes memory _data
+    ) public override returns (uint256 executionId) {
         require(!executions[executionNonce].executed, "Already executed");
         executions[executionNonce].to = _to;
         executions[executionNonce].value = _value;
@@ -124,18 +142,18 @@ contract KeyHolder is ERC725 {
 
         emit ExecutionRequested(executionNonce, _to, _value, _data);
 
-        if (keyHasPurpose(keccak256(msg.sender),1) || keyHasPurpose(keccak256(msg.sender),2)) {
+        if (
+            keyHasPurpose(keccak256(abi.encodePacked(msg.sender)), 1) ||
+            keyHasPurpose(keccak256(abi.encodePacked(msg.sender)), 2)
+        ) {
             approve(executionNonce, true);
         }
 
         executionNonce++;
-        return executionNonce-1;
+        return executionNonce - 1;
     }
 
-    function removeKey(bytes32 _key)
-        public
-        returns (bool success)
-    {
+    function removeKey(bytes32 _key) public returns (bool success) {
         require(keys[_key].key == _key, "No such key");
         emit KeyRemoved(keys[_key].key, keys[_key].purpose, keys[_key].keyType);
 
@@ -151,12 +169,11 @@ contract KeyHolder is ERC725 {
     function keyHasPurpose(bytes32 _key, uint256 _purpose)
         public
         view
-        returns(bool result)
+        returns (bool result)
     {
         bool isThere;
         if (keys[_key].key == 0) return false;
         isThere = keys[_key].purpose <= _purpose;
         return isThere;
     }
-
 }

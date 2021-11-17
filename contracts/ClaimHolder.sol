@@ -1,33 +1,29 @@
-pragma solidity ^0.4.22;
+// SPDX-License-Identifier: MIT
 
-import './ERC735.sol';
-import './KeyHolder.sol';
+pragma solidity >=0.4.22 <0.9.0;
 
-// **Warning!** This file is a protoype version of our work around ERC 725.
-// This file is now out of date and **should not be used**.
-// Our current identity contracts are here:
-// https://github.com/OriginProtocol/origin/tree/master/origin-contracts/contracts/identity
+import "./ERC735.sol";
+import "./KeyHolder.sol";
 
 contract ClaimHolder is KeyHolder, ERC735 {
-
-    mapping (bytes32 => Claim) claims;
-    mapping (uint256 => bytes32[]) claimsByType;
+    mapping(bytes32 => Claim) claims;
+    mapping(uint256 => bytes32[]) claimsByType;
 
     function addClaim(
         uint256 _claimType,
         uint256 _scheme,
         address _issuer,
-        bytes _signature,
-        bytes _data,
-        string _uri
-    )
-        public
-        returns (bytes32 claimRequestId)
-    {
-        bytes32 claimId = keccak256(_issuer, _claimType);
+        bytes memory _signature,
+        bytes memory _data,
+        string memory _uri
+    ) public override returns (bytes32 claimRequestId) {
+        bytes32 claimId = keccak256(abi.encodePacked(_issuer, _claimType));
 
         if (msg.sender != address(this)) {
-          require(keyHasPurpose(keccak256(msg.sender), 3), "Sender does not have claim signer key");
+            require(
+                keyHasPurpose(keccak256(abi.encodePacked(msg.sender)), 3),
+                "Sender does not have claim signer key"
+            );
         }
 
         if (claims[claimId].issuer != _issuer) {
@@ -54,9 +50,16 @@ contract ClaimHolder is KeyHolder, ERC735 {
         return claimId;
     }
 
-    function removeClaim(bytes32 _claimId) public returns (bool success) {
+    function removeClaim(bytes32 _claimId)
+        public
+        override
+        returns (bool success)
+    {
         if (msg.sender != address(this)) {
-          require(keyHasPurpose(keccak256(msg.sender), 1), "Sender does not have management key");
+            require(
+                keyHasPurpose(keccak256(abi.encodePacked(msg.sender)), 1),
+                "Sender does not have management key"
+            );
         }
 
         /* uint index; */
@@ -79,14 +82,15 @@ contract ClaimHolder is KeyHolder, ERC735 {
 
     function getClaim(bytes32 _claimId)
         public
-        constant
-        returns(
+        view
+        override
+        returns (
             uint256 claimType,
             uint256 scheme,
             address issuer,
-            bytes signature,
-            bytes data,
-            string uri
+            bytes memory signature,
+            bytes memory data,
+            string memory uri
         )
     {
         return (
@@ -101,10 +105,10 @@ contract ClaimHolder is KeyHolder, ERC735 {
 
     function getClaimIdsByType(uint256 _claimType)
         public
-        constant
-        returns(bytes32[] claimIds)
+        view
+        override
+        returns (bytes32[] memory claimIds)
     {
         return claimsByType[_claimType];
     }
-
 }

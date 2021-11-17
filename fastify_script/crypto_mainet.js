@@ -4,7 +4,7 @@ const { SHA256, RIPEMD160, enc } = require('crypto-js')
 const keccak256 = require('keccak256')
 const secp256k1 = require('secp256k1')
 
-const mapChain = require("./chainID.json");
+const mapChain = require("./chain_info.json");
 const privateKey = ["3edae309e75a778f88af5d8017d93f477297abaaae143439604ea08b38c0ec85", "ed6cbdcbf49f7ffc68fdea51c28f7254bb6d6056960f81ce346a79b1907e91d9", "9468a6f6a3ba77b5c7ac99b29cf755ea014a4500b8009d16aa1b34b5a4d097c6"];
 const address = [0x8B6ff17E6a61879661296CBA916BeC85F6649062, 0x3AA528B07d997b2E78e7BFB96fdFB7CA31cE0e46, 0xFdd57658465a46125327D7e786411530C985FEa8];
 
@@ -27,12 +27,12 @@ function signMessage(message, _privateKey) {
 
 function getSign(message, _privateKey) {
     const sign = signMessage(message, _privateKey)
-    return Buffer.from(sign.signature).toString("hex") + sign.recid.toString().padStart(2, "0")
+    return "0x" + Buffer.from(sign.signature).toString("hex") + sign.recid.toString().padStart(2, "0")
 }
 
 const msg = compressMessage(["Hello", "Goodbye", "Duc", "Duyen"])
 const sign = getSign(msg, privateKey[0])
-console.log(msg.toString("hex"))
+console.log("0x" + msg.toString("hex"))
 console.log(sign)
 // console.log(sign)
 // console.log(keccak256("\x19Ethereum Signed Message:\n32" + keccak256(msg)).toString("hex"))

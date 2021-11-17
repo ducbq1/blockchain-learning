@@ -1,0 +1,477 @@
+{
+	"compiler": {
+		"version": "0.8.7+commit.e28d00a7"
+	},
+	"language": "Solidity",
+	"output": {
+		"abi": [
+			{
+				"inputs": [],
+				"stateMutability": "nonpayable",
+				"type": "constructor"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "owner",
+						"type": "address"
+					},
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "spender",
+						"type": "address"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "value",
+						"type": "uint256"
+					}
+				],
+				"name": "Approval",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "from",
+						"type": "address"
+					},
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "to",
+						"type": "address"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "value",
+						"type": "uint256"
+					}
+				],
+				"name": "Transfer",
+				"type": "event"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "owner",
+						"type": "address"
+					},
+					{
+						"internalType": "address",
+						"name": "spender",
+						"type": "address"
+					}
+				],
+				"name": "allowance",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "spender",
+						"type": "address"
+					},
+					{
+						"internalType": "uint256",
+						"name": "amount",
+						"type": "uint256"
+					}
+				],
+				"name": "approve",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "account",
+						"type": "address"
+					}
+				],
+				"name": "balanceOf",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "decimals",
+				"outputs": [
+					{
+						"internalType": "uint8",
+						"name": "",
+						"type": "uint8"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "spender",
+						"type": "address"
+					},
+					{
+						"internalType": "uint256",
+						"name": "subtractedValue",
+						"type": "uint256"
+					}
+				],
+				"name": "descreaseAllowance",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "bytes",
+						"name": "sig",
+						"type": "bytes"
+					},
+					{
+						"internalType": "bytes32",
+						"name": "dataHash",
+						"type": "bytes32"
+					}
+				],
+				"name": "getRecoveredAddress",
+				"outputs": [
+					{
+						"internalType": "address",
+						"name": "addr",
+						"type": "address"
+					}
+				],
+				"stateMutability": "pure",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "spender",
+						"type": "address"
+					},
+					{
+						"internalType": "uint256",
+						"name": "addedValue",
+						"type": "uint256"
+					}
+				],
+				"name": "increaseAllowance",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "name",
+				"outputs": [
+					{
+						"internalType": "string",
+						"name": "",
+						"type": "string"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "symbol",
+				"outputs": [
+					{
+						"internalType": "string",
+						"name": "",
+						"type": "string"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "totalSupply",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "recipient",
+						"type": "address"
+					},
+					{
+						"internalType": "uint256",
+						"name": "amount",
+						"type": "uint256"
+					}
+				],
+				"name": "transfer",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "sender",
+						"type": "address"
+					},
+					{
+						"internalType": "address",
+						"name": "recipient",
+						"type": "address"
+					},
+					{
+						"internalType": "uint256",
+						"name": "amount",
+						"type": "uint256"
+					}
+				],
+				"name": "transferFrom",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "bytes32",
+						"name": "message",
+						"type": "bytes32"
+					},
+					{
+						"internalType": "bytes",
+						"name": "sig",
+						"type": "bytes"
+					},
+					{
+						"internalType": "address",
+						"name": "_addr",
+						"type": "address"
+					}
+				],
+				"name": "verify",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "pure",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint64",
+						"name": "timestamp",
+						"type": "uint64"
+					},
+					{
+						"internalType": "uint256",
+						"name": "count",
+						"type": "uint256"
+					},
+					{
+						"internalType": "bytes[]",
+						"name": "_data",
+						"type": "bytes[]"
+					},
+					{
+						"internalType": "bytes[]",
+						"name": "_sign",
+						"type": "bytes[]"
+					},
+					{
+						"internalType": "bytes32",
+						"name": "root_hash",
+						"type": "bytes32"
+					}
+				],
+				"name": "verifyPayload",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			}
+		],
+		"devdoc": {
+			"kind": "dev",
+			"methods": {},
+			"version": 1
+		},
+		"userdoc": {
+			"kind": "user",
+			"methods": {},
+			"version": 1
+		}
+	},
+	"settings": {
+		"compilationTarget": {
+			"contracts/ChainIdentification.sol": "ChainIdentification"
+		},
+		"evmVersion": "london",
+		"libraries": {},
+		"metadata": {
+			"bytecodeHash": "ipfs"
+		},
+		"optimizer": {
+			"enabled": false,
+			"runs": 200
+		},
+		"remappings": []
+	},
+	"sources": {
+		"contracts/ChainIdentification.sol": {
+			"keccak256": "0x93fb30f98807315f0ea170751cb777d904a460790e3ddefc750a1278b15a4297",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://919649a2be98e0263f4479239bcc43fcb485b7ecef6d743a336273180c667876",
+				"dweb:/ipfs/QmaT9zFYRSKJSGD69TKjtfZQPxVSYudsYf4h6DLRH2MHgo"
+			]
+		},
+		"contracts/ClaimHolder.sol": {
+			"keccak256": "0xc0e6a1489a0ce7a87d21d31d7838163845699c8575e9b1115006f796d3d0fbee",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://4faeb151efef0d15f8b1d79694ad29e4a2d1b11672fca591e6850e2e0c6c54bd",
+				"dweb:/ipfs/QmYM4Vpm3W79jHDpsVxoxh5u6EE12jMtWR1fY3AeW7SPzw"
+			]
+		},
+		"contracts/ClaimVerifier.sol": {
+			"keccak256": "0x5fa23b225a458177fee9db1e2d185b46d711e1948266b5b17fd835183882ff2b",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://a52682d319a96d945f12c73e241368d97cddf550a638928c2e0501487079434a",
+				"dweb:/ipfs/QmUNABvBRzY4fHXrkUhhstx6X1fS6vAKd4K5NuM6Na3Z2j"
+			]
+		},
+		"contracts/ERC20.sol": {
+			"keccak256": "0xe87aa8cb77b3858dd5364f86283a52de1dd4f33d744a453cfc3d23dae7586905",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://cba9f19cd7b0d764c50d0c7681053784816a5fe83029d51d2b95cf0b5c0967bc",
+				"dweb:/ipfs/QmYqL6jKRLCPML7GftmihDT83rkJ4AgcmtQbuqRTSDePYj"
+			]
+		},
+		"contracts/ERC725.sol": {
+			"keccak256": "0x695ecdd0f0acb0e91b4837b0d63ea5e4e0b727507c8849cc3355414d9db9fdd5",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://d6475aa80181865e970067a98704f78b9a639f2957f7fe92ac0f0da01ac76b09",
+				"dweb:/ipfs/Qma3nfwhL3LbbgzSQVktHeNYVLa8re3jY2e7CxN4MvpP2e"
+			]
+		},
+		"contracts/ERC735.sol": {
+			"keccak256": "0xa4ec772efc2533840f32855713764bf697fbc488c5bad9d6579c03f0a2aa3bcd",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://2f210b24edb8f0ec14a30eb32b764412f2b4f9abd75a5699b19df93690879933",
+				"dweb:/ipfs/QmbJyUUaGi2kXxMjr4T8vizBSvN5A3ZL3npUqs3xJERd9n"
+			]
+		},
+		"contracts/IERC20.sol": {
+			"keccak256": "0x102cd6cc7339a05038256cf869d344d9e18e36078956a2e24baa2358ca6d8e49",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://7951516d7853319a82a3eb0ed79636faa5854cbd5af5c4f7adf267059ef02362",
+				"dweb:/ipfs/QmT9UnRNb481VMxUA4BNWSw3gmm6Rsfg3VqmEkZZuhD1yw"
+			]
+		},
+		"contracts/Identity.sol": {
+			"keccak256": "0xce2309c38ca58dcab2cd4566fe5418b391963c785166605fe01af78ec55c5a82",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://072cf52a43e1ba021b344d46580c03669e3f93be5f4235f2b932e6f32c831fe3",
+				"dweb:/ipfs/QmdpgS8SwmvG5Rj7WToCsxCLS1ZiAEVaBWdYMQfp8MeebA"
+			]
+		},
+		"contracts/KeyHolder.sol": {
+			"keccak256": "0xf55411f55dd858076761e6cd2e388e587b09462545dc535346e98ac97851d7bb",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://831b1f1cb28be3f5124332cbba4837012b623a1c70e43b7676ad1f1c2a27d8b9",
+				"dweb:/ipfs/QmPztqQ7nn9yubCdDi6UquVAjyGpTUMNFWYLaj4NJK6yrP"
+			]
+		}
+	},
+	"version": 1
+}

@@ -1,41 +1,28 @@
-pragma solidity ^0.4.22;
+// SPDX-License-Identifier: MIT
 
-import './ClaimHolder.sol';
+pragma solidity >=0.4.22 <0.9.0;
 
-// **Warning!** This file is a protoype version of our work around ERC 725.
-// This file is now out of date and **should not be used**.
-// Our current identity contracts are here:
-// https://github.com/OriginProtocol/origin/tree/master/origin-contracts/contracts/identity
-
-/**
- * NOTE: This contract exists as a convenience for deploying an identity with
- * some 'pre-signed' claims. If you don't care about that, just use ClaimHolder
- * instead.
- */
+import "./ClaimHolder.sol";
 
 contract Identity is ClaimHolder {
-
-    function Identity(
-        uint256[] _claimType,
-        uint256[] _scheme,
-        address[] _issuer,
-        bytes _signature,
-        bytes _data,
-        string _uri,
-        uint256[] _sigSizes,
-        uint256[] dataSizes,
-        uint256[] uriSizes
-    )
-        public
-    {
+    constructor(
+        uint256[] memory _claimType,
+        uint256[] memory _scheme,
+        address[] memory _issuer,
+        bytes memory _signature,
+        bytes memory _data,
+        string memory _uri,
+        uint256[] memory _sigSizes,
+        uint256[] memory dataSizes,
+        uint256[] memory uriSizes
+    ) {
         bytes32 claimId;
-        uint offset = 0;
-        uint uoffset = 0;
-        uint doffset = 0;
+        uint256 offset = 0;
+        uint256 uoffset = 0;
+        uint256 doffset = 0;
 
-        for (uint i = 0; i < _claimType.length; i++) {
-
-            claimId = keccak256(_issuer[i], _claimType[i]);
+        for (uint256 i = 0; i < _claimType.length; i++) {
+            claimId = keccak256(abi.encodePacked(_issuer[i], _claimType[i]));
 
             claims[claimId] = Claim(
                 _claimType[i],
@@ -62,23 +49,31 @@ contract Identity is ClaimHolder {
         }
     }
 
-    function getBytes(bytes _str, uint256 _offset, uint256 _length) constant returns (bytes) {
+    function getBytes(
+        bytes memory _str,
+        uint256 _offset,
+        uint256 _length
+    ) private pure returns (bytes memory) {
         bytes memory sig = new bytes(_length);
         uint256 j = 0;
-        for (uint256 k = _offset; k< _offset + _length; k++) {
-          sig[j] = _str[k];
-          j++;
+        for (uint256 k = _offset; k < _offset + _length; k++) {
+            sig[j] = _str[k];
+            j++;
         }
         return sig;
     }
 
-    function getString(string _str, uint256 _offset, uint256 _length) constant returns (string) {
+    function getString(
+        string memory _str,
+        uint256 _offset,
+        uint256 _length
+    ) private pure returns (string memory) {
         bytes memory strBytes = bytes(_str);
         bytes memory sig = new bytes(_length);
         uint256 j = 0;
-        for (uint256 k = _offset; k< _offset + _length; k++) {
-          sig[j] = strBytes[k];
-          j++;
+        for (uint256 k = _offset; k < _offset + _length; k++) {
+            sig[j] = strBytes[k];
+            j++;
         }
         return string(sig);
     }
