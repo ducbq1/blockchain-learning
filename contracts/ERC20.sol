@@ -21,6 +21,9 @@ contract ERC20 is IERC20 {
         _name = name_;
         _symbol = symbol_;
         _totalSupply = totalSupply_;
+        _balances[msg.sender] = totalSupply_;
+
+        emit Transfer(address(0), msg.sender, _totalSupply);
     }
 
     function name() public view virtual override returns (string memory) {
