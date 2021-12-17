@@ -5,11 +5,59 @@ const keccak256 = require('keccak256')
 const secp256k1 = require('secp256k1')
 const mapChain = require("./chain_info");
 
-module.exports = {}
+module.exports = {
+    // did:network:address, lấy thông tin của chainId của mạng và địa chỉ
+    resolve_gen: (input) => {
+        const input_arr = input.split(":");
+        return ({
+            network: mapChain[input_arr[1]].chainID,
+            address: input_arr[2]
+        });
+    },
+    // did:base58:message, mã hóa thông tin của thông điệp
+    base58_gen: (input) => base58(input.split(":")[2]),
+    // did:compress:message-message-message, nén và mã hóa nhiều dữ liệu bằng merkle tree
+    compress_gen: (input) => compressMessage(input.split(":")[2].split("-")).toString('hex'),
+    // did:message:private, ký mã hóa lên một bản ghi, thông điệp
+    sign_gen: (input) => {
+        const input_arr = input.split(":");
+        return getSign(compressMessage([input_arr[1]]), input_arr[2]);
+    },
+    // did:network:private, tạo address từ private key
+    address_gen: (input) => {
+        const input_arr = input.split(":");
+        return getAddress(input_arr[2], input_arr[1]);
+    },
+    // did:uncompressed:private hoặc did:compressed:private, tạo public key từ private key
+    public_gen: (input) => {
+        const input_arr = input.split(":");
+        if (input_arr[1] == "uncompressed") {
+            return Buffer.from(getPublicKey(input_arr[2])).toString("hex");
+        } else {
+            return Buffer.from(getPublicKeyCompressed(input_arr[2])).toString("hex");
+        }
+    },
+    // did:resolve:did.did.did-sign.sign.sign
+    payload_gen: (input) => {
+        const input_criteria = input.slice(12);
+        const input_arr = input_criteria.split("-");
+        return resolvePayload({
+            data: input_arr[0].split(".").map(item => {
+                item_arr = item.split(":");
+                return ({
+                    network: mapChain[item_arr[1]].chainID,
+                    address: item_arr[2]
+                });
+            }),
+            signature: input_arr[1].split(".")
+        })
+    }
 
+}
+
+/*************************************************************
 const privateKey = ["3edae309e75a778f88af5d8017d93f477297abaaae143439604ea08b38c0ec85", "ed6cbdcbf49f7ffc68fdea51c28f7254bb6d6056960f81ce346a79b1907e91d9", "9468a6f6a3ba77b5c7ac99b29cf755ea014a4500b8009d16aa1b34b5a4d097c6"];
 const address = [0x8B6ff17E6a61879661296CBA916BeC85F6649062, 0x3AA528B07d997b2E78e7BFB96fdFB7CA31cE0e46, 0xFdd57658465a46125327D7e786411530C985FEa8];
-
 
 const msg = compressMessage(["Hello", "Goodbye", "Duc", "Duyen"])
 const sign = getSign(msg, privateKey[0])
@@ -17,27 +65,8 @@ console.log('ROOT', "0x" + msg.toString("hex"))
 console.log('SIGN', sign)
 console.log("BSC", getAddress(privateKey[0], "binance"))
 console.log("ETH", getAddress(privateKey[0], "ethereum"))
+*************************************************************/
 
-console.log(resolvePayload({
-    data: [resolveDID("did:mainnet:0x3434")],
-    signature: ["0x3434"]
-}))
-console.log(resolveDID("did:mainnet:0x8B6ff17E6a61879661296CBA916BeC85F6649062"))
-
-
-
-console.log(address)
-
-// did có dạng did:network:address
-function resolveDID(did_message) {
-    const array_message = did_message.split(":");
-    return ({
-        network: mapChain[array_message[1]].chainID,
-        address: array_message[2]
-    });
-}
-
-// did có dạng did:base58:message
 function base58(address_hex) {
     const alphabet = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
     let base58string = ""
@@ -55,9 +84,7 @@ function base58(address_hex) {
     return base58string
 }
 
-// did có dạng DIDResolve([resolveDID])
 function resolvePayload({
-    // mảng các resolve did:network:address
     data: array_did,
     signature: array_signature
 }) {
@@ -70,12 +97,6 @@ function resolvePayload({
         signature: array_signature,
         message: "0x" + compressMessage(array_did).toString("hex")
     });
-}
-
-
-const storage = [];
-function storeData(chain, address) {
-    storage.push(mapChain[chain].chainID.concat(address.toString(16)));
 }
 
 function compressMessage(data) {

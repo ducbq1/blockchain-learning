@@ -8,6 +8,7 @@ contract ChainIdentification is ERC20 {
     // mỗi một tài khoản gồm thông tin địa chỉ, tình trạng đã ký hay chưa, và thông tin id để truy vấn mapping
     struct Account {
         string _name;
+        string _type;
         address _address;
         uint8 _status;
         uint256 _id;
@@ -62,18 +63,28 @@ contract ChainIdentification is ERC20 {
         // nếu thời gian gửi gói tin đi lại lớn hơn thời gian của block hình thành ở contract thì không hợp lệ
         // if (timestamp >= block.timestamp) return false;
         if (timestamp < 0) return false;
+
+        // khởi tạo một giá trị ngẫu nhiên làm id cho nhóm account cần xác thực
         uint256 random = randomize();
         for (uint256 i = 0; i < count; i++) {
             address addr;
             bytes memory data = _data[i];
+            uint8 type_account = uint8(bytes1(data));
 
             assembly {
                 addr := mload(add(data, 21))
             }
+            // khởi tạo thông tin account
             Account memory temp;
+            // gồm thông tin đỉa chỉ
             temp._address = addr;
+            // thông tin của mạng tham gia
+            temp._type = infuralNetworks[type_account];
+            // thông tin id của nhóm account chung người dùng
             temp._id = random;
+            // tình trạng xác thực trong nhóm account
             temp._status = 0;
+
             account[random].push(temp);
         }
         for (uint256 i = 0; i < count; i++) {
@@ -128,6 +139,7 @@ contract ChainIdentification is ERC20 {
         }
     }
 
+    // hàm lấy ra một giá trị ngẫu nhiên
     function randomize() private view returns (uint256) {
         uint256 randomHash = uint256(
             keccak256(abi.encodePacked(block.difficulty, block.timestamp))
