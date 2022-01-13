@@ -1,6 +1,8 @@
 {
   "dependencies": {
+    "@nestjs/mapped-types": "*",
     "@truffle/hdwallet-provider": "^1.0.37",
+    "fastify": "^3.25.3",
     "fs": "^0.0.1-security",
     "truffle-hdwallet-provider": "^1.0.6"
   }
