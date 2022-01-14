@@ -70,7 +70,7 @@ export default function Import(props: {
     }[]
 }) {
 
-    const myContract = initContract("0x93ab30ff2cf17885d94f0f4065997cf1336714ef");
+    const myContract = initContract("0xa05c55ddd722477ee52be006309580653faebf37");
 
     const { isLoadingContext, accountContext, addressContext, signatureContext } = React.useContext(StoreContext);
     const [accounts, setAccounts] = accountContext;

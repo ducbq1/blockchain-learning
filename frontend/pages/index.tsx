@@ -3,14 +3,10 @@ import Head from 'next/head';
 import MenuIcon from '@mui/icons-material/Menu';
 import { Container, AppBar, Box, Toolbar, Typography, Button, Tabs, Tab, IconButton } from '@mui/material';
 import { randomBytes } from 'crypto';
-
-// did:ethr:rinkeby:0x6acf3bb1ef0ee84559de2bc2bd9d91532062a730
-
+import io from 'socket.io-client';
 import Grid from "../components/Grid";
 import MetaMaskOnboarding from '@metamask/onboarding'
 import MyStore, { StoreContext } from '../store';
-
-
 import Web3 from 'web3'
 import ChainIdentification from '../contracts/ChainIdentification'
 import { IntegrationInstructionsTwoTone } from '@mui/icons-material';
@@ -31,10 +27,8 @@ declare global {
   }
 }
 
-type AbiItem = any;
-
 const web3 = new Web3(Web3.givenProvider || "ws://localhost:8545");
-const initContract = addr => new web3.eth.Contract(ChainIdentification.abi as AbiItem[], addr)
+const initContract = addr => new web3.eth.Contract(ChainIdentification.abi as any[], addr)
 const messageVerify = "0x" + randomBytes(32).toString('hex');
 console.log(messageVerify)
 
@@ -72,14 +66,12 @@ export default function Index() {
   const onboarding = React.useRef<MetaMaskOnboarding>();
 
   const myContract = initContract("0x93ab30ff2cf17885d94f0f4065997cf1336714ef");
-  // console.log(myContract.methods.name().call().then((result) => console.log(result)))
-  // myContract.methods.verify(
-  //   "0xedfbb352a9180afeb44a5dc89c55cbcd4053b731188df9abb0e75a003cfae6d4",
-  //   "0x60a6d9b077878ba9d439469c83bb2fa9ae7421025c9eeeef43585fea4ce7a13965202160eadcfb651d1d95f8c10fec7cfe1ad4275131577b27a08bce7503c46f00",
-  //   "0x8B6ff17E6a61879661296CBA916BeC85F6649062"
-  // ).call().then(result => console.log(result));
 
   React.useEffect(() => {
+    // const newSocket = io(`http://${window.location.hostname}:4000/notifications`);
+    const newSocket = io('http://localhost:4000/notifications');
+    newSocket.on('messageToServer', data => console.log(data));
+    newSocket.on('API', data => console.log(data));
     if (!onboarding.current) {
       onboarding.current = new MetaMaskOnboarding();
     }
