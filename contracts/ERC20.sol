@@ -90,12 +90,14 @@ contract ERC20 is IERC20 {
         _transfer(sender, recipient, amount);
 
         uint256 currentAllowance = _allowances[sender][msg.sender];
-        require(
-            currentAllowance >= amount,
-            "ERC20: transfer amount exceeds allowance"
-        );
-        unchecked {
-            _approve(sender, msg.sender, currentAllowance - amount);
+        if (currentAllowance != type(uint256).max) {
+            require(
+                currentAllowance >= amount,
+                "ERC20: transfer amount exceeds allowance"
+            );
+            unchecked {
+                _approve(sender, msg.sender, currentAllowance - amount);
+            }
         }
         return true;
     }

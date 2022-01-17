@@ -1,15 +1,11 @@
 import * as React from 'react';
 import Head from 'next/head';
-import MenuIcon from '@mui/icons-material/Menu';
-import { Container, AppBar, Box, Toolbar, Typography, Button, Tabs, Tab, IconButton } from '@mui/material';
+import { Container, AppBar, Box, Toolbar, Typography, Button, Tabs, Tab, TextField } from '@mui/material';
 import { randomBytes } from 'crypto';
-import io from 'socket.io-client';
 import Grid from "../components/Grid";
 import MetaMaskOnboarding from '@metamask/onboarding'
-import MyStore, { StoreContext } from '../store';
+import { StoreContext } from '../store';
 import Web3 from 'web3'
-import ChainIdentification from '../contracts/ChainIdentification'
-import { IntegrationInstructionsTwoTone } from '@mui/icons-material';
 
 const ONBOARD_TEXT: string = 'Install MetaMask!';
 const CONNECT_TEXT: string = 'Connect';
@@ -27,16 +23,15 @@ declare global {
   }
 }
 
-const web3 = new Web3(Web3.givenProvider || "ws://localhost:8545");
-const initContract = addr => new web3.eth.Contract(ChainIdentification.abi as any[], addr)
-const messageVerify = "0x" + randomBytes(32).toString('hex');
-console.log(messageVerify)
+// const initContract = (addr: string) => new web3.eth.Contract(ChainIdentification.abi as any[], addr)
+// const myContract = initContract("0xe7292a0ce6cb4bc958d4d1311dd5aae872156265");
+// const newSocket = io(`http://${window.location.hostname}:4000/notifications`);
 
 function TabPanel(props: TabPanelProps) {
   const { children, value, index, ...other } = props;
   return (
     <>
-      {value === 0 && <Grid msgVerify={messageVerify} />}
+      {value === 0 && <Grid />}
       {value === 1 && <p>Hello</p>}
       {value === 2 && <p>Goodbye</p>}
     </>
@@ -50,81 +45,88 @@ function a11yProps(index: number) {
   };
 }
 
-
+const messageVerify = "0x" + randomBytes(32).toString('hex');
+const web3 = new Web3(Web3.givenProvider || "ws://localhost:8545");
 
 export default function Index() {
-
-  const { isLoadingContext, accountContext, addressContext, signatureContext } = React.useContext(StoreContext);
-  const [isLoading, setLoading] = isLoadingContext;
-  const [accounts, setAccounts]: [any, any] = accountContext;
+  const { messageContext, accountContext, addressContext, signatureContext } = React.useContext(StoreContext);
+  const [accounts, setAccounts]: [Array<string>, any] = accountContext;
   const [address, setAddress] = addressContext;
   const [signature, setSignature] = signatureContext;
-
+  const [message, setMessage] = messageContext;
   const [buttonText, setButtonText] = React.useState(ONBOARD_TEXT);
   const [value, setValue] = React.useState(0);
-  const [isDisabled, setDisabled] = React.useState(false);
+  const [chainId, setChainId] = React.useState("");
   const onboarding = React.useRef<MetaMaskOnboarding>();
 
-  const myContract = initContract("0x93ab30ff2cf17885d94f0f4065997cf1336714ef");
-
   React.useEffect(() => {
-    // const newSocket = io(`http://${window.location.hostname}:4000/notifications`);
-    const newSocket = io('http://localhost:4000/notifications');
-    newSocket.on('messageToServer', data => console.log(data));
-    newSocket.on('API', data => console.log(data));
     if (!onboarding.current) {
       onboarding.current = new MetaMaskOnboarding();
     }
   }, []);
 
   React.useEffect(() => {
-    async function handleSet(messageVerify, account) {
-      setAddress(address.add(account));
-      const sign = await web3.eth.sign(messageVerify, account);
+    async function handleSet(message: string, chainId: string, account: string) {
+      setAddress(address.add("0x" + chainId.slice(2).padStart(2, "0") + account.slice(2)));
+      const sign = await web3.eth.sign(message, account);
       setSignature(signature.add(sign));
     }
+    setMessage(messageVerify);
     if (MetaMaskOnboarding.isMetaMaskInstalled()) {
       if (accounts.length > 0) {
         setButtonText(CONNECTED_TEXT + ": " + accounts[0]);
-        handleSet(messageVerify, accounts[0]);
-        setDisabled(true);
-        console.log(address, signature);
+        handleSet(message, chainId, accounts[0]);
         onboarding.current.stopOnboarding();
       } else {
         setButtonText(CONNECT_TEXT);
-        setDisabled(false);
       }
     }
   }, [accounts]);
 
   React.useEffect(() => {
-    function handleNewAccounts(newAccounts) {
+    async function handleAccounts() {
+      const newAccounts = await window.ethereum.request({method: 'eth_requestAccounts'});
+      const newChainId = await window.ethereum.request({method: 'eth_chainId'});
+      setChainId(newChainId);
       setAccounts(newAccounts);
     }
     if (MetaMaskOnboarding.isMetaMaskInstalled()) {
-      window.ethereum
-        .request({ method: 'eth_requestAccounts' })
-        .then(handleNewAccounts);
-      window.ethereum.on('accountsChanged', handleNewAccounts);
+      handleAccounts();
+      window.ethereum.on('accountsChanged', (accounts: string[]) => setAccounts(accounts));
+      window.ethereum.on('chainChanged', (chainId: string) => {
+        setChainId(chainId);
+        window.location.reload();
+      });
       return () => {
-        window.ethereum.removeListener('accountsChanged', handleNewAccounts);
+        window.ethereum.removeListener('accountsChanged', (accounts: string[]) => setAccounts(accounts));
       }
     }
   }, []);
-
-  const handleChange = (event: React.SyntheticEvent, newValue: number) => {
-    setValue(newValue);
-  }
 
   function onConnect(event: React.SyntheticEvent) {
     if (MetaMaskOnboarding.isMetaMaskInstalled()) {
       window.ethereum
         .request({ method: 'eth_requestAccounts' })
-        .then((newAccounts) => setAccounts(newAccounts))
+        .then((newAccounts: string[]) => setAccounts(newAccounts))
     } else {
       onboarding.current.startOnboarding();
     }
   }
+
+  function onDisconnect(event: React.SyntheticEvent) {
+    console.log("Hello")
+    window.ethereum.request({
+      method: "eth_requestAccounts",
+      params: [{eth_accounts: {}}]
+  })}
+
+  const handleChange = (event: React.SyntheticEvent, newValue: number) => {
+    setValue(newValue);
+  }
+
+  const handleMessage = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setMessage(event.target.value);
+  };
 
   return (
     <>
@@ -137,10 +139,13 @@ export default function Index() {
             <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
               Cross Chain Identification
             </Typography>
-            <Button color="inherit" onClick={onConnect} disabled={isDisabled}>{buttonText}</Button>
+            <Button color="inherit" onClick={onDisconnect}>Disconnect</Button>
+            <Button color="inherit" onClick={onConnect}>{buttonText}</Button>
           </Toolbar>
         </AppBar>
         <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
+
+        <TextField id="outlined-basic" label="Message" variant="outlined" sx={{mt: 5, width: '78ch'}} defaultValue={messageVerify} onChange={handleMessage} inputProps={{ maxLength: 66 }}/>
           <Tabs value={value} onChange={handleChange} aria-label="basic tabs example" textColor="secondary">
             <Tab label="Identification" {...a11yProps(0)} />
             <Tab label="Wallet Manager" {...a11yProps(1)} />

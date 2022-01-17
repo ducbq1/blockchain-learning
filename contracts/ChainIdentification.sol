@@ -5,17 +5,19 @@ pragma solidity >=0.4.22 <0.9.0;
 import "./ERC20.sol";
 
 contract ChainIdentification is ERC20 {
+    uint8 constant PENDING = 0;
+    uint8 constant ACTIVE = 1;
+    uint8 constant REJECTED = 2;
+
     // mỗi một tài khoản gồm thông tin địa chỉ, tình trạng đã ký hay chưa, và thông tin id để truy vấn mapping
     struct Account {
-        string _name;
         string _type;
         address _address;
         uint8 _status;
-        uint256 _id;
     }
 
     // sự kiện xác thực chuỗi chéo thành công
-    event TransactionComplete(address indexed from, bool isTrue);
+    event TransactionComplete(address indexed from, uint256 random);
     event VerifyComplete(address indexed from, address indexed to);
 
     // khai báo mapping các chain của các mạng thông dụng
@@ -26,13 +28,18 @@ contract ChainIdentification is ERC20 {
     // khai báo biến mapping giữa một id ngẫu nhiên với mảng các địa chỉ được định danh cùng nhau
     mapping(uint256 => Account[]) private account;
 
-    constructor() ERC20("Identity Token", "IT", 10E26) {
+    constructor() ERC20("Identity Token", "IT", 10E5) {
         _address = address(this);
         infuralNetworks[0x01] = "mainnet";
         infuralNetworks[0x03] = "ropsten";
         infuralNetworks[0x04] = "rinkeby";
         infuralNetworks[0x05] = "goerli";
         infuralNetworks[0x2a] = "kovan";
+    }
+
+    // trả về địa chỉ của hợp đồng khi được deploy
+    function addressContract() public view returns (address) {
+        return _address;
     }
 
     // xác thực thông tin thông qua chữ ký và địa chỉ
@@ -52,7 +59,6 @@ contract ChainIdentification is ERC20 {
     function verifyPayload(
         // thời gian gói tin bắt đầu được gửi đi
         uint64 timestamp,
-        uint256 count,
         // _data bao gồm thông tin chainId và địa chỉ của người dùng
         bytes[] memory _data,
         // _sign bao gồm chữ ký của root_hash ứng với từng khóa riêng tương ứng
@@ -61,11 +67,10 @@ contract ChainIdentification is ERC20 {
         bytes32 root_hash
     ) public returns (bool) {
         // nếu thời gian gửi gói tin đi lại lớn hơn thời gian của block hình thành ở contract thì không hợp lệ
-        // if (timestamp >= block.timestamp) return false;
-        if (timestamp < 0) return false;
-
+        if (timestamp <= 0) return false;
         // khởi tạo một giá trị ngẫu nhiên làm id cho nhóm account cần xác thực
         uint256 random = randomize();
+        uint256 count = _data.length;
         for (uint256 i = 0; i < count; i++) {
             address addr;
             bytes memory data = _data[i];
@@ -80,13 +85,12 @@ contract ChainIdentification is ERC20 {
             temp._address = addr;
             // thông tin của mạng tham gia
             temp._type = infuralNetworks[type_account];
-            // thông tin id của nhóm account chung người dùng
-            temp._id = random;
             // tình trạng xác thực trong nhóm account
-            temp._status = 0;
+            temp._status = PENDING;
 
             account[random].push(temp);
         }
+
         for (uint256 i = 0; i < count; i++) {
             address addr;
             bytes memory data = _data[i];
@@ -97,11 +101,12 @@ contract ChainIdentification is ERC20 {
                 return false;
             }
         }
+
         for (uint256 i = 0; i < count; i++) {
-            account[random][i]._status = 1;
+            account[random][i]._status = ACTIVE;
         }
 
-        emit TransactionComplete(_address, true);
+        emit TransactionComplete(_address, random);
 
         return true;
     }
@@ -145,5 +150,50 @@ contract ChainIdentification is ERC20 {
             keccak256(abi.encodePacked(block.difficulty, block.timestamp))
         );
         return randomHash % 1000;
+    }
+
+    function rejectAddress(uint256 id, address addr)
+        public
+        virtual
+        returns (bool)
+    {
+        uint256 count = account[id].length;
+        for (uint256 i = 0; i < count; i++) {
+            if (account[id][i]._address == addr) {
+                account[id][i]._status = REJECTED;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function get(uint256 id) public view returns (Account[] memory) {
+        return account[id];
+    }
+
+    function recoverAddress(uint256 id, address addr)
+        public
+        virtual
+        returns (bool)
+    {
+        uint256 count = account[id].length;
+        for (uint256 i = 0; i < count; i++) {
+            if (account[id][i]._address == addr) {
+                account[id][i]._status = ACTIVE;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function sumBalance(uint256 id) public view returns (uint256) {
+        uint256 sum = 0;
+        uint256 count = account[id].length;
+        for (uint256 i = 0; i < count; i++) {
+            if (account[id][i]._status == ACTIVE) {
+                sum += balanceOf(account[id][i]._address);
+            }
+        }
+        return sum;
     }
 }
