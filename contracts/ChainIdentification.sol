@@ -55,6 +55,56 @@ contract ChainIdentification is ERC20 {
         return false;
     }
 
+    function insertPayload(
+        uint64 timestamp,
+        bytes[] memory _data,
+        bytes[] memory _sign,
+        bytes32 root_hash,
+        uint256 combineId
+    ) public returns (bool) {
+        // nếu thời gian gửi gói tin đi lại lớn hơn thời gian của block hình thành ở contract thì không hợp lệ
+        if (timestamp <= 0) return false;
+        uint256 count = _data.length;
+        for (uint256 i = 0; i < count; i++) {
+            address addr;
+            bytes memory data = _data[i];
+            uint8 type_account = uint8(bytes1(data));
+
+            assembly {
+                addr := mload(add(data, 21))
+            }
+            // khởi tạo thông tin account
+            Account memory temp;
+            // gồm thông tin đỉa chỉ
+            temp._address = addr;
+            // thông tin của mạng tham gia
+            temp._type = infuralNetworks[type_account];
+            // tình trạng xác thực trong nhóm account
+            temp._status = PENDING;
+
+            account[combineId].push(temp);
+        }
+
+        for (uint256 i = 0; i < count; i++) {
+            address addr;
+            bytes memory data = _data[i];
+            assembly {
+                addr := mload(add(data, 21))
+            }
+            if (!verify(root_hash, _sign[i], addr)) {
+                return false;
+            }
+        }
+
+        for (uint256 i = 0; i < count; i++) {
+            account[combineId][i]._status = ACTIVE;
+        }
+
+        emit TransactionComplete(_address, combineId);
+
+        return true;
+    }
+
     // xác thực thông tin của gói thông tin
     function verifyPayload(
         // thời gian gói tin bắt đầu được gửi đi
@@ -70,6 +120,9 @@ contract ChainIdentification is ERC20 {
         if (timestamp <= 0) return false;
         // khởi tạo một giá trị ngẫu nhiên làm id cho nhóm account cần xác thực
         uint256 random = randomize();
+        while (account[random].length > 0) {
+            random = randomize();
+        }
         uint256 count = _data.length;
         for (uint256 i = 0; i < count; i++) {
             address addr;
@@ -169,6 +222,11 @@ contract ChainIdentification is ERC20 {
 
     function get(uint256 id) public view returns (Account[] memory) {
         return account[id];
+    }
+
+    function remove(uint256 id) public virtual returns (bool) {
+        delete account[id];
+        return true;
     }
 
     function recoverAddress(uint256 id, address addr)

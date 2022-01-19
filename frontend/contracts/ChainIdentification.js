@@ -381,6 +381,25 @@ export const abi = [
                 "type": "uint256"
             }
         ],
+        "name": "remove",
+        "outputs": [
+            {
+                "internalType": "bool",
+                "name": "",
+                "type": "bool"
+            }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "id",
+                "type": "uint256"
+            }
+        ],
         "name": "sumBalance",
         "outputs": [
             {
