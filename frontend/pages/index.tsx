@@ -20,6 +20,7 @@ import { StoreContext } from "../store";
 import Web3 from "web3";
 import { LoadingButton } from "@mui/lab";
 import ExitToAppIcon from "@mui/icons-material/ExitToApp";
+import Statistic from "../components/Statistic";
 
 const ONBOARD_TEXT: string = "Install MetaMask!";
 const CONNECT_TEXT: string = "Connect";
@@ -47,7 +48,7 @@ function TabPanel(props: TabPanelProps) {
     <>
       {value === 0 && <Grid />}
       {value === 1 && <DataIdentify />}
-      {value === 2 && <p>STATISTIC...</p>}
+      {value === 2 && <Statistic />}
     </>
   );
 }

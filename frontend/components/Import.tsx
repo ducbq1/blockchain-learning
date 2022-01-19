@@ -68,20 +68,9 @@ export default function Import(props: {
   const [loading, setLoading] = React.useState(false);
   const [loadingVerify, setLoadingVerify] = React.useState(false);
   const [nameIdentify, setNameIdentify] = React.useState("");
+  const [combineId, setCombineId] = React.useState<number>();
 
   const handleVerify = async () => {
-    console.log(message);
-    console.log(address);
-    console.log(signature);
-
-    var operatingSystem = "Unknown OS";
-    if (navigator.userAgent.indexOf("Mac") != -1) operatingSystem = "MacOS";
-    if (navigator.userAgent.indexOf("Win") != -1) operatingSystem = "Windows";
-    if (navigator.userAgent.indexOf("Linux") != -1) operatingSystem = "Linux";
-    const internetProtocol = await axios.get("https://api.ipify.org/");
-
-    console.log(operatingSystem, internetProtocol.data);
-
     setLoadingVerify(true);
 
     const data_addr = [];
@@ -144,87 +133,87 @@ export default function Import(props: {
       return;
     }
 
-    myContract.methods
-      .name()
-      .call()
-      .then((result: any) => console.log(result));
-    myContract.methods
-      .getRecoveredAddress(
-        "0x0739da1c678dfbd9fe7452382082567c18c7f448e2702a7177b3223415d145ab57fa11471dc7d8cf1d31c6c7b7f1fb6b02b471565392d5cb9dd2df0ade989cc41b",
-        "0xd6601225b99170f73c5678fa7fe4924d3737836e458c690d4dcc93a84901b2c2"
-      )
-      .call()
-      .then((result: any) => console.log(result));
-
     try {
-      const resultValue = await myContract.methods
-        .verifyPayload(Date.now(), data_addr, data_sign, message)
-        .send({ from: accounts[0] });
-      const resultId =
-        resultValue.events.TransactionComplete.returnValues.random;
-      console.log(resultId);
-      const result: boolean = resultId > 0;
+      // if (combineId != null && combineId > 0) {
+      if (false) {
+        console.log(combineId);
+        const resultValue = await myContract.methods
+          .insertPayload(Date.now(), data_addr, data_sign, message, combineId)
+          .send({ from: accounts[0] });
+        if (resultValue) {
+          console.log("Hello");
+        }
+        setLoading(false);
+      } else {
+        const resultValue = await myContract.methods
+          .verifyPayload(Date.now(), data_addr, data_sign, message)
+          .send({ from: accounts[0] });
+        const resultId =
+          resultValue.events.TransactionComplete.returnValues.random;
+        console.log(resultId);
+        const result: boolean = resultId > 0;
 
-      setIsVerify(result);
-      setLoading(false);
-      setOpen(true);
-
-      if (result) {
         setIsVerify(result);
-        const identifyId: string = uuidv4();
+        setLoading(false);
+        setOpen(true);
 
-        const sumBalance = await myContract.methods.sumBalance(resultId).call();
-        await axios.post(`http://${window.location.hostname}:4000/identifies`, {
-          id: identifyId,
-          title: nameIdentify,
-          message: message,
-          combineId: resultId,
-          balance: sumBalance,
-        });
+        if (result) {
+          setIsVerify(result);
+          const identifyId: string = uuidv4();
 
-        let operatingSystem = "Unknown OS";
-        if (navigator.userAgent.indexOf("Mac") != -1) {
-          operatingSystem = "MacOS";
-        }
-        if (navigator.userAgent.indexOf("Win") != -1) {
-          operatingSystem = "Windows";
-        }
-        if (navigator.userAgent.indexOf("Linux") != -1) {
-          operatingSystem = "Linux";
-        }
-        const internetProtocol = await axios.get("https://api.ipify.org/");
+          const sumBalance = await myContract.methods
+            .sumBalance(resultId)
+            .call();
+          await axios.post(
+            `http://${window.location.hostname}:4000/identifies`,
+            {
+              id: identifyId,
+              title: nameIdentify,
+              message: message,
+              combineId: resultId,
+              balance: sumBalance,
+            }
+          );
 
-        await axios.post(`http://${window.location.hostname}:4000/users`, {
-          id: uuidv4(),
-          operatingSystem: operatingSystem,
-          internetProtocol: internetProtocol.data,
-          isActive: true,
-          identifyId: identifyId,
-        });
+          let operatingSystem = "Unknown OS";
+          if (navigator.userAgent.indexOf("Mac") != -1) {
+            operatingSystem = "MacOS";
+          }
+          if (navigator.userAgent.indexOf("Win") != -1) {
+            operatingSystem = "Windows";
+          }
+          if (navigator.userAgent.indexOf("Linux") != -1) {
+            operatingSystem = "Linux";
+          }
+          const internetProtocol = await axios.get("https://api.ipify.org/");
 
-        let setOfAddresses = address.values();
-        let setOfSignature = signature.values();
-        for (let i = 0; i < address.size; i++) {
-          let signature = setOfSignature.next().value;
-          let dataAddress = setOfAddresses.next().value;
-          axios.post(`http://${window.location.hostname}:4000/addresses`, {
+          await axios.post(`http://${window.location.hostname}:4000/users`, {
             id: uuidv4(),
-            message: message,
-            address: "0x" + dataAddress.slice(4),
-            signature: signature,
-            infuralNetworks: mapping[dataAddress.slice(0, 4)],
-            isVerify: true,
+            operatingSystem: operatingSystem,
+            internetProtocol: internetProtocol.data,
+            isActive: true,
             identifyId: identifyId,
           });
+
+          let setOfAddresses = address.values();
+          let setOfSignature = signature.values();
+          for (let i = 0; i < address.size; i++) {
+            let signature = setOfSignature.next().value;
+            let dataAddress = setOfAddresses.next().value;
+            axios.post(`http://${window.location.hostname}:4000/addresses`, {
+              id: uuidv4(),
+              message: message,
+              address: "0x" + dataAddress.slice(4),
+              signature: signature,
+              infuralNetworks: mapping[dataAddress.slice(0, 4)],
+              isVerify: true,
+              identifyId: identifyId,
+            });
+          }
         }
       }
     } catch (err) {
       setLoading(false);
-      /*
-      if (err.code == 4001) {
-          return Promise.reject(err);
-      }
-      */
     }
   };
 
@@ -258,11 +247,18 @@ export default function Import(props: {
         }
       });
       if (address.size == 0 || signature.size == 0) {
+        setCombineId(null);
         setIsVerify(false);
         setSignature(new Set());
         setOpen(false);
       }
     });
+  };
+
+  const handleCombineId = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setCombineId(Number(event.target.value));
   };
 
   return (
@@ -281,7 +277,7 @@ export default function Import(props: {
             <Typography
               key={index}
               variant="body1"
-              my={0.5}
+              my={1}
               style={{ fontWeight: 600 }}
             >
               {mapping[it.name]}
@@ -301,7 +297,7 @@ export default function Import(props: {
             <Typography
               key={index}
               variant="body1"
-              my={0.5}
+              my={1}
               style={{ fontWeight: 600 }}
             >
               {"0x" + it.address.substring(0)}
@@ -370,7 +366,7 @@ export default function Import(props: {
       <Grow in={isVerify}>
         <Stack
           direction="row"
-          spacing={3}
+          spacing={2}
           justifyContent={"flex-start"}
           alignItems="center"
           sx={{ mt: 1 }}
@@ -383,6 +379,18 @@ export default function Import(props: {
               sx={{ my: 1, width: "50ch" }}
               InputProps={{
                 readOnly: true,
+              }}
+            />
+          </Stack>
+          <Stack direction="column">
+            <TextField
+              onChange={handleCombineId}
+              id="outlined-number"
+              label="Key"
+              type="number"
+              sx={{ my: 1, width: "10ch" }}
+              InputLabelProps={{
+                shrink: true,
               }}
             />
           </Stack>

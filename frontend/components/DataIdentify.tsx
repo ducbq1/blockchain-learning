@@ -376,7 +376,7 @@ export default function DataTable() {
         </Zoom>
       </Grid>
       <Grid item xs={12}>
-        <Box sx={{ height: 400, width: "100%" }}>
+        <Box sx={{ height: 270, width: "100%" }}>
           <DataGrid
             rows={rows}
             columns={columns}
@@ -385,6 +385,15 @@ export default function DataTable() {
             checkboxSelection
           />
         </Box>
+      </Grid>
+      <Grid item xs={12}>
+        <img
+          src="sea_rocks_moss_132634_1280x720clone.jpg"
+          alt=""
+          loading="lazy"
+          height="230"
+          width="100%"
+        />
       </Grid>
     </Grid>
   );

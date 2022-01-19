@@ -313,6 +313,45 @@ export const abi = [
         "type": "function"
     },
     {
+        "inputs": [
+            {
+                "internalType": "uint64",
+                "name": "timestamp",
+                "type": "uint64"
+            },
+            {
+                "internalType": "bytes[]",
+                "name": "_data",
+                "type": "bytes[]"
+            },
+            {
+                "internalType": "bytes[]",
+                "name": "_sign",
+                "type": "bytes[]"
+            },
+            {
+                "internalType": "bytes32",
+                "name": "root_hash",
+                "type": "bytes32"
+            },
+            {
+                "internalType": "uint256",
+                "name": "combineId",
+                "type": "uint256"
+            }
+        ],
+        "name": "insertPayload",
+        "outputs": [
+            {
+                "internalType": "bool",
+                "name": "",
+                "type": "bool"
+            }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
         "inputs": [],
         "name": "name",
         "outputs": [
