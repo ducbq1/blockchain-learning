@@ -5,8 +5,11 @@ pragma solidity >=0.4.22 <0.9.0;
 import "./ERC20.sol";
 
 contract ChainIdentification is ERC20 {
+    // chưa sử dụng trạng thái pending
     uint8 constant PENDING = 0;
+    // khi địa chỉ hợp lệ thì active = 1
     uint8 constant ACTIVE = 1;
+    // khi địa chỉ được reject khỏi liên kết
     uint8 constant REJECTED = 2;
 
     // mỗi một tài khoản gồm thông tin địa chỉ, tình trạng đã ký hay chưa, và thông tin id để truy vấn mapping
@@ -65,6 +68,18 @@ contract ChainIdentification is ERC20 {
         // nếu thời gian gửi gói tin đi lại lớn hơn thời gian của block hình thành ở contract thì không hợp lệ
         if (timestamp <= 0) return false;
         uint256 count = _data.length;
+
+        for (uint256 i = 0; i < count; i++) {
+            address addr;
+            bytes memory data = _data[i];
+            assembly {
+                addr := mload(add(data, 21))
+            }
+            if (!verify(root_hash, _sign[i], addr)) {
+                return false;
+            }
+        }
+
         for (uint256 i = 0; i < count; i++) {
             address addr;
             bytes memory data = _data[i];
@@ -80,24 +95,23 @@ contract ChainIdentification is ERC20 {
             // thông tin của mạng tham gia
             temp._type = infuralNetworks[type_account];
             // tình trạng xác thực trong nhóm account
-            temp._status = PENDING;
+            temp._status = ACTIVE;
+
+            uint256 existCount = account[combineId].length;
+            bool exist = false;
+
+            for (uint256 j = 0; j < existCount; j++) {
+                if (account[combineId][j]._address == addr) {
+                    exist = true;
+                    break;
+                }
+            }
+
+            if (exist) {
+                continue;
+            }
 
             account[combineId].push(temp);
-        }
-
-        for (uint256 i = 0; i < count; i++) {
-            address addr;
-            bytes memory data = _data[i];
-            assembly {
-                addr := mload(add(data, 21))
-            }
-            if (!verify(root_hash, _sign[i], addr)) {
-                return false;
-            }
-        }
-
-        for (uint256 i = 0; i < count; i++) {
-            account[combineId][i]._status = ACTIVE;
         }
 
         emit TransactionComplete(_address, combineId);
@@ -124,6 +138,18 @@ contract ChainIdentification is ERC20 {
             random = randomize();
         }
         uint256 count = _data.length;
+
+        for (uint256 i = 0; i < count; i++) {
+            address addr;
+            bytes memory data = _data[i];
+            assembly {
+                addr := mload(add(data, 21))
+            }
+            if (!verify(root_hash, _sign[i], addr)) {
+                return false;
+            }
+        }
+
         for (uint256 i = 0; i < count; i++) {
             address addr;
             bytes memory data = _data[i];
@@ -139,24 +165,9 @@ contract ChainIdentification is ERC20 {
             // thông tin của mạng tham gia
             temp._type = infuralNetworks[type_account];
             // tình trạng xác thực trong nhóm account
-            temp._status = PENDING;
+            temp._status = ACTIVE;
 
             account[random].push(temp);
-        }
-
-        for (uint256 i = 0; i < count; i++) {
-            address addr;
-            bytes memory data = _data[i];
-            assembly {
-                addr := mload(add(data, 21))
-            }
-            if (!verify(root_hash, _sign[i], addr)) {
-                return false;
-            }
-        }
-
-        for (uint256 i = 0; i < count; i++) {
-            account[random][i]._status = ACTIVE;
         }
 
         emit TransactionComplete(_address, random);

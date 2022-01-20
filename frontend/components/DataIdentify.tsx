@@ -311,7 +311,6 @@ export default function DataTable() {
 
   const handleOpen = () => {
     setOpen(true);
-    console.log(dataSelect);
   };
   return (
     <Grid

@@ -134,23 +134,13 @@ export default function Import(props: {
     }
 
     try {
-      // if (combineId != null && combineId > 0) {
-      if (false) {
-        console.log(combineId);
+      if (combineId != null && combineId > 0) {
         const resultValue = await myContract.methods
           .insertPayload(Date.now(), data_addr, data_sign, message, combineId)
           .send({ from: accounts[0] });
-        if (resultValue) {
-          console.log("Hello");
-        }
-        setLoading(false);
-      } else {
-        const resultValue = await myContract.methods
-          .verifyPayload(Date.now(), data_addr, data_sign, message)
-          .send({ from: accounts[0] });
+
         const resultId =
           resultValue.events.TransactionComplete.returnValues.random;
-        console.log(resultId);
         const result: boolean = resultId > 0;
 
         setIsVerify(result);
@@ -158,7 +148,38 @@ export default function Import(props: {
         setOpen(true);
 
         if (result) {
-          setIsVerify(result);
+          let setOfAddresses = address.values();
+          let setOfSignature = signature.values();
+          for (let i = 0; i < address.size; i++) {
+            let signature = setOfSignature.next().value;
+            let dataAddress = setOfAddresses.next().value;
+            axios.post(
+              `http://${window.location.hostname}:4000/identifies/address/${combineId}`,
+              {
+                id: uuidv4(),
+                message: message,
+                address: "0x" + dataAddress.slice(4),
+                signature: signature,
+                infuralNetworks: mapping[dataAddress.slice(0, 4)],
+                isVerify: true,
+                identifyId: null,
+              }
+            );
+          }
+        }
+      } else {
+        const resultValue = await myContract.methods
+          .verifyPayload(Date.now(), data_addr, data_sign, message)
+          .send({ from: accounts[0] });
+        const resultId =
+          resultValue.events.TransactionComplete.returnValues.random;
+        const result: boolean = resultId > 0;
+
+        setIsVerify(result);
+        setLoading(false);
+        setOpen(true);
+
+        if (result) {
           const identifyId: string = uuidv4();
 
           const sumBalance = await myContract.methods
