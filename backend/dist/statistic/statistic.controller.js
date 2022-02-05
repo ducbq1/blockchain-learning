@@ -12,28 +12,36 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.AppController = void 0;
+exports.StatisticController = void 0;
 const common_1 = require("@nestjs/common");
-const app_service_1 = require("./app.service");
-let AppController = class AppController {
-    constructor(appService) {
-        this.appService = appService;
+const statistic_service_1 = require("./statistic.service");
+let StatisticController = class StatisticController {
+    constructor(statisticService) {
+        this.statisticService = statisticService;
     }
-    getSession(session) {
-        session.visits = session.visits ? session.visits + 1 : 1;
-        console.log('Reload: ' + session.visits);
+    getListCoinMarket() {
+        return this.statisticService.getListCoinMarket();
+    }
+    getBalance(address) {
+        return this.statisticService.getBalance(address);
     }
 };
 __decorate([
     (0, common_1.Get)(),
-    __param(0, (0, common_1.Session)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
-], AppController.prototype, "getSession", null);
-AppController = __decorate([
-    (0, common_1.Controller)(),
-    __metadata("design:paramtypes", [app_service_1.AppService])
-], AppController);
-exports.AppController = AppController;
-//# sourceMappingURL=app.controller.js.map
+], StatisticController.prototype, "getListCoinMarket", null);
+__decorate([
+    (0, common_1.Get)(':address'),
+    __param(0, (0, common_1.Param)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], StatisticController.prototype, "getBalance", null);
+StatisticController = __decorate([
+    (0, common_1.Controller)('statistic'),
+    __metadata("design:paramtypes", [statistic_service_1.StatisticService])
+], StatisticController);
+exports.StatisticController = StatisticController;
+//# sourceMappingURL=statistic.controller.js.map

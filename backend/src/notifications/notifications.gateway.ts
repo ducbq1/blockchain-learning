@@ -11,7 +11,7 @@ import {
 } from '@nestjs/websockets';
 import { NotificationsService } from './notifications.service';
 import { Logger } from '@nestjs/common';
-import { Socket, Server } from 'socket.io';
+import { Socket } from 'socket.io';
 
 @WebSocketGateway({ cors: true })
 export class NotificationsGateway
@@ -27,7 +27,6 @@ export class NotificationsGateway
   }
 
   handleConnection(client: Socket) {
-    // throw new Error('Method not implemented.');
     this.currentUser++;
     client.emit('API', 'Hello');
     this.logger.log(`Connected: ${client.id}`);
@@ -52,7 +51,6 @@ export class NotificationsGateway
     return this.notificationsService.remove(id);
   }
 
-  // @UsePipes(new ValidationPipe())
   @SubscribeMessage('messageToServer')
   handleMessage(
     @ConnectedSocket() client: Socket,

@@ -5,12 +5,10 @@ pragma solidity >=0.4.22 <0.9.0;
 import "./ERC20.sol";
 
 contract ChainIdentification is ERC20 {
-    // chưa sử dụng trạng thái pending
-    uint8 constant PENDING = 0;
     // khi địa chỉ hợp lệ thì active = 1
     uint8 constant ACTIVE = 1;
     // khi địa chỉ được reject khỏi liên kết
-    uint8 constant REJECTED = 2;
+    uint8 constant REJECTED = 0;
 
     // mỗi một tài khoản gồm thông tin địa chỉ, tình trạng đã ký hay chưa, và thông tin id để truy vấn mapping
     struct Account {
@@ -58,6 +56,7 @@ contract ChainIdentification is ERC20 {
         return false;
     }
 
+    // thêm vào nhóm liên kết có sẵn (id được cung cấp) một hoặc nhiều các địa chỉ khác
     function insertPayload(
         uint64 timestamp,
         bytes[] memory _data,
@@ -119,7 +118,7 @@ contract ChainIdentification is ERC20 {
         return true;
     }
 
-    // xác thực thông tin của gói thông tin
+    // xác thực thông tin của gói thông tin đồng thời tạo nhóm liên kết các địa chỉ
     function verifyPayload(
         // thời gian gói tin bắt đầu được gửi đi
         uint64 timestamp,
@@ -216,6 +215,7 @@ contract ChainIdentification is ERC20 {
         return randomHash % 1000;
     }
 
+    // từ chối, ngắt địa chí ví khỏi chuỗi liên kết các địa chỉ
     function rejectAddress(uint256 id, address addr)
         public
         virtual
@@ -231,15 +231,7 @@ contract ChainIdentification is ERC20 {
         return false;
     }
 
-    function get(uint256 id) public view returns (Account[] memory) {
-        return account[id];
-    }
-
-    function remove(uint256 id) public virtual returns (bool) {
-        delete account[id];
-        return true;
-    }
-
+    // khôi phục lại địa chỉ ví trong chuỗi liên kết các địa chỉ
     function recoverAddress(uint256 id, address addr)
         public
         virtual
@@ -255,6 +247,18 @@ contract ChainIdentification is ERC20 {
         return false;
     }
 
+    // lấy thông tin của nhóm địa chỉ có id được cung cấp
+    function getInfo(uint256 id) public view returns (Account[] memory) {
+        return account[id];
+    }
+
+    // xóa nhóm địa chỉ đã liên kết với id được cung cấp
+    function removeGroup(uint256 id) public virtual returns (bool) {
+        delete account[id];
+        return true;
+    }
+
+    // tính tổng số dư token của nhóm địa chỉ dựa vào id được cung cấp
     function sumBalance(uint256 id) public view returns (uint256) {
         uint256 sum = 0;
         uint256 count = account[id].length;

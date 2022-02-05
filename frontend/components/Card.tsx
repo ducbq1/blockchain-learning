@@ -15,24 +15,24 @@ function MediaCard({
   data,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
   return (
-    <Card sx={{ maxWidth: 2000 }}>
+    <Card sx={{ maxWidth: 1000 }}>
       <CardMedia
         component="img"
-        height="140"
-        image="pagoda_temple_architecture_225450_1024x600.jpg"
+        height="200"
+        image="104939467-Blockchain_Industry_Thumb_00000.jpg"
         alt="green iguana"
       />
       <CardContent>
         <Divider />
         <Typography variant="body1" my={0.5} style={{ fontWeight: 600 }}>
-          Identity
+          Identification
         </Typography>
         <Typography variant="body2" color="text.secondary">
           Controlled by Keys. Has Claims, can add Claims to other identities.
         </Typography>
         <Divider />
         <Typography variant="body1" my={0.5} style={{ fontWeight: 600 }}>
-          Claim Issuer
+          Asset Manager
         </Typography>
         <Typography variant="body2" color="text.secondary">
           Also an Identity. Trusted by Protected Contracts to certify Identities
@@ -40,18 +40,11 @@ function MediaCard({
         </Typography>
         <Divider />
         <Typography variant="body1" my={0.5} style={{ fontWeight: 600 }}>
-          Claim Checker
+          Statistic
         </Typography>
         <Typography variant="body2" color="text.secondary">
           A contract only allowing interactions from Identites holding Claims
           from a trusted issuer.
-        </Typography>
-        <Divider />
-        <Typography variant="body1" my={0.5} style={{ fontWeight: 600 }}>
-          Claim
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          Some data on one Identity that provably came from another Identity.
         </Typography>
       </CardContent>
       <CardActions>

@@ -387,7 +387,7 @@ export default function DataTable() {
       </Grid>
       <Grid item xs={12}>
         <img
-          src="sea_rocks_moss_132634_1280x720clone.jpg"
+          src="Network-Effect-Banner2.jpg"
           alt=""
           loading="lazy"
           height="230"

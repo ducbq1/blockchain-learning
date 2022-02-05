@@ -8,6 +8,7 @@ import { IdentifiesModule } from './identifies/identifies.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { AddressesModule } from './addresses/addresses.module';
 import { ValidateMiddleware } from './validate.middleware';
+import { StatisticModule } from './statistic/statistic.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { ValidateMiddleware } from './validate.middleware';
     IdentifiesModule,
     NotificationsModule,
     AddressesModule,
+    StatisticModule,
   ],
   controllers: [AppController],
   providers: [AppService],

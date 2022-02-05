@@ -20,6 +20,7 @@ const identifies_module_1 = require("./identifies/identifies.module");
 const notifications_module_1 = require("./notifications/notifications.module");
 const addresses_module_1 = require("./addresses/addresses.module");
 const validate_middleware_1 = require("./validate.middleware");
+const statistic_module_1 = require("./statistic/statistic.module");
 let AppModule = class AppModule {
     constructor(connection) {
         this.connection = connection;
@@ -42,6 +43,7 @@ AppModule = __decorate([
             identifies_module_1.IdentifiesModule,
             notifications_module_1.NotificationsModule,
             addresses_module_1.AddressesModule,
+            statistic_module_1.StatisticModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],

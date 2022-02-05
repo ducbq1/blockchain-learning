@@ -19,12 +19,12 @@ export default function FullWidthGrid() {
 
   return (
     <Grid container spacing={2}>
-      <Grid item xs={6} md={8}>
+      <Grid item xs={8} md={7}>
         <React.Fragment>
           <Import item={itemIdentification} />
         </React.Fragment>
       </Grid>
-      <Grid item xs={6} md={4}>
+      <Grid item xs={4} md={5}>
         <React.Fragment>
           <Card />
         </React.Fragment>
