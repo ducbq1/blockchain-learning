@@ -28,23 +28,22 @@ function MediaCard({
           Identification
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Controlled by Keys. Has Claims, can add Claims to other identities.
+          Identify group address in order to make a group address or insert into
+          available group address.
         </Typography>
         <Divider />
         <Typography variant="body1" my={0.5} style={{ fontWeight: 600 }}>
           Asset Manager
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Also an Identity. Trusted by Protected Contracts to certify Identities
-          with Claims.
+          Show group address with detail information.
         </Typography>
         <Divider />
         <Typography variant="body1" my={0.5} style={{ fontWeight: 600 }}>
           Statistic
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          A contract only allowing interactions from Identites holding Claims
-          from a trusted issuer.
+          Overview of group address with chart, credit score.
         </Typography>
       </CardContent>
       <CardActions>

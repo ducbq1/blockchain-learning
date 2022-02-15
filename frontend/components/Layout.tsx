@@ -8,9 +8,9 @@ export default function Layout({ children }) {
       <main>{children}</main>
       <div
         style={{
-          position: "absolute",
-          bottom: 7,
+          position: "relative",
           width: "99%",
+          top: 230,
           textAlign: "center",
         }}
       >

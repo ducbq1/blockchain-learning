@@ -21,11 +21,12 @@ import GppGoodIcon from "@mui/icons-material/GppGood";
 import Web3 from "web3";
 import { abi } from "../contracts/ChainIdentification";
 import { addressContract } from "../contracts/AddressContract";
-import LinearProgress from "@mui/material/LinearProgress";
 import Stack from "@mui/material/Stack";
 import Slide from "@mui/material/Slide";
 import Grow from "@mui/material/Grow";
 import Typography from "@mui/material/Typography";
+import LinearProgress from "@mui/material/LinearProgress";
+import CircularProgress from "@mui/material/CircularProgress";
 
 import {
   Chart as ChartJS,
@@ -90,8 +91,9 @@ export default function Statistic() {
   const [dataSelected, setDataSelected] = React.useState<string>("");
   const [rows, setRows] = React.useState([]);
   const [eachBalance, setEachBalance] = React.useState([]);
+  const [eachAddress, setEachAddress] = React.useState([]);
   const [eachTransaction, setEachTransaction] = React.useState([]);
-  const [balance, setBalance] = React.useState(0);
+  const [balance, setBalance] = React.useState([0, 0]);
   const [open, setOpen] = React.useState(false);
   const { messageContext, accountContext, addressContext, signatureContext } =
     React.useContext(StoreContext);
@@ -118,121 +120,66 @@ export default function Statistic() {
   }, [accounts]);
 
   React.useEffect(() => {
-    async function returnData() {
-      const returnValue = await axios.get(
-        `http://${window.location.hostname}:4000/statistic`
-      );
-      return returnValue.data;
-    }
-    /*
-    returnData().then((item) => {
-      setData({
-        labels: item.data.map((item: { name: string }) => item.name),
-        datasets: [
-          {
-            label: "# of Votes",
-            data: item.data.map(
-              (item: { total_supply: string }) => item.total_supply
-            ),
-            backgroundColor: [
-              "rgba(255, 99, 132, 0.2)",
-              "rgba(54, 162, 235, 0.2)",
-              "rgba(255, 206, 86, 0.2)",
-              "rgba(75, 192, 192, 0.2)",
-              "rgba(153, 102, 255, 0.2)",
-              "rgba(25, 159, 64, 0.2)",
-            ],
-            borderColor: [
-              "rgba(255, 99, 132, 1)",
-              "rgba(54, 162, 235, 1)",
-              "rgba(255, 206, 86, 1)",
-              "rgba(75, 192, 192, 1)",
-              "rgba(153, 102, 255, 1)",
-              "rgba(255, 159, 64, 1)",
-            ],
-            borderWidth: 1,
-          },
-        ],
-      });
+    setData({
+      labels: eachAddress,
+      datasets: [
+        {
+          label: "Balance",
+          data: eachBalance,
+          backgroundColor: "rgba(255, 99, 132, 0.5)",
+        },
+        {
+          label: "Transaction Count",
+          data: eachTransaction,
+          backgroundColor: "rgba(53, 162, 235, 0.5)",
+        },
+      ],
     });
-    */
-  }, []);
+  }, [balance, eachAddress, eachBalance, eachTransaction]);
 
   const handleChange = (event: SelectChangeEvent<typeof dataSelected>) => {
+    setLoading(true);
     let catchValue = event.target.value;
     let id = catchValue.split("&")[0];
-    setBalance(0);
     setDataSelected(catchValue);
-    axios
-      .get(`http://${window.location.hostname}:4000/identifies/addresses/${id}`)
-      .then((response) => {
-        let sumBalance = 0;
-        response.data
-          .filter((item: { isVerify: boolean }) => item.isVerify == true)
-          .forEach((item: { address: string }) => {
-            web3.eth
-              .getBalance(item.address)
-              .then((value) => {
-                console.log(item.address, value);
-                setEachBalance([...eachBalance, Number(value)]);
-                sumBalance += Number(value);
-                // setBalance(balance + Number(value));
-              })
-              .then(() => setBalance(sumBalance / 10 ** 18));
-          });
-        // response.data.forEach((item) => {
-        //   web3.eth
-        //     .getBalance(item.address)
-        //     .then((value) => setEachBalance([...eachBalance, Number(value)]));
-        // });
-        response.data.forEach((item) => {
-          web3.eth
-            .getTransactionCount(item.address)
-            .then((value) =>
-              setEachTransaction([...eachTransaction, Number(value)])
-            );
-        });
-        setData({
-          labels: response.data.map(
-            // (item: any) => "Address " + (response.data.indexOf(item) + 1)
-            (item: any) => item.address.substring(0, 20).concat("...")
-          ),
-          datasets: [
-            {
-              label: "Balance",
-              // data: response.data.map(() =>
-              //   faker.datatype.number({ min: 0, max: 1000 })
-              // ),
-              data: eachBalance,
-              backgroundColor: "rgba(255, 99, 132, 0.5)",
-            },
-            {
-              label: "Transaction Count",
-              data: eachTransaction,
-              backgroundColor: "rgba(53, 162, 235, 0.5)",
-            },
-          ],
-        });
-        setRows(
-          response.data.map(
-            (item: {
-              id: string;
-              uuid: string;
-              message: string;
-              infuralNetworks: string;
-              address: string;
-              isVerify: boolean;
-            }) => ({
-              id: response.data.indexOf(item) + 1,
-              uuid: item.id,
-              network: item.infuralNetworks,
-              message: item.message.substring(0, 30).concat("..."),
-              address: item.address,
-              isVerify: item.isVerify,
-            })
-          )
+
+    async function fetchData() {
+      let sumBalance = 0;
+      let sumActiveBalance = 0;
+      let arrAddress = [];
+      let arrTransactionCount = [];
+      let arrBalance = [];
+      const groupAddress = await axios.get(
+        `http://${window.location.hostname}:4000/identifies/addresses/${id}`
+      );
+
+      for (let element of groupAddress.data) {
+        let balanceAddress = await web3.eth.getBalance(element.address);
+        sumBalance += Number(balanceAddress);
+        if (element.isVerify) {
+          sumActiveBalance += Number(balanceAddress);
+        }
+      }
+      setBalance([sumActiveBalance / 10 ** 18, sumBalance / 10 ** 18]);
+
+      for (let element of groupAddress.data) {
+        arrAddress.push(element.address);
+        let transactionRoot = await web3.eth.getTransactionCount(
+          element.address
         );
-      });
+        // setEachTransaction([...eachTransaction, transactionRoot]);
+        arrTransactionCount.push(Number(transactionRoot));
+        let balanceRoot = await web3.eth.getBalance(element.address);
+        // setEachBalance([...eachBalance, balanceRoot]);
+        arrBalance.push(Number(balanceRoot) / 10 ** 18);
+      }
+
+      setEachAddress(arrAddress);
+      setEachTransaction(arrTransactionCount);
+      setEachBalance(arrBalance);
+    }
+
+    fetchData().then(() => setLoading(false));
   };
 
   const handleClose = () => {
@@ -243,45 +190,57 @@ export default function Statistic() {
     setOpen(true);
   };
   return (
-    <Grid
-      container
-      spacing={2}
-      direction="row"
-      justifyContent="center"
-      alignItems="center"
-    >
-      <Grid item xs={4}>
-        <FormControl sx={{ my: 1, width: 300 }}>
-          <InputLabel id="demo-controlled-open-select-label">
-            Identification
-          </InputLabel>
-          <Select
-            labelId="demo-controlled-open-select-label"
-            id="demo-controlled-open-select"
-            open={open}
-            onClose={handleClose}
-            onOpen={handleOpen}
-            value={dataSelected}
-            label="Identification"
-            onChange={handleChange}
-          >
-            {dataSelect.map((item, index) => {
-              let mergeId = item.id + "&" + item.combineId;
-              return (
-                <MenuItem key={index} value={mergeId}>
-                  {item.title}
-                </MenuItem>
-              );
-            })}
-          </Select>
-        </FormControl>
+    <Grid container spacing={2} direction="row" alignItems="center">
+      <Grid item xs={12}>
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="center"
+        >
+          <Stack direction="row" alignItems="center" spacing={4}>
+            <FormControl sx={{ my: 1, width: 300 }}>
+              <InputLabel id="demo-controlled-open-select-label">
+                Identification
+              </InputLabel>
+              <Select
+                labelId="demo-controlled-open-select-label"
+                id="demo-controlled-open-select"
+                open={open}
+                onClose={handleClose}
+                onOpen={handleOpen}
+                value={dataSelected}
+                label="Identification"
+                onChange={handleChange}
+              >
+                {dataSelect.map((item, index) => {
+                  let mergeId = item.id + "&" + item.combineId;
+                  return (
+                    <MenuItem key={index} value={mergeId}>
+                      {item.title}
+                    </MenuItem>
+                  );
+                })}
+              </Select>
+            </FormControl>
+            {loading && (
+              <Box sx={{ display: "flex" }}>
+                <CircularProgress />
+              </Box>
+            )}
+          </Stack>
+          <Stack direction="row" spacing={4}>
+            <Typography variant="h5" component="h2">
+              Total:{" "}
+              {`${balance[0].toPrecision(5)} / ${balance[1].toPrecision(5)}`}{" "}
+              ETH
+            </Typography>
+            <Typography variant="h5" component="h2">
+              Credit Score: 500
+            </Typography>
+          </Stack>
+        </Stack>
       </Grid>
-      <Grid item xs={4}>
-        <Typography variant="h5" component="h2">
-          {balance} ETH
-        </Typography>
-      </Grid>
-      <Grid item xs={10}>
+      <Grid item xs={12}>
         <Bar options={options} data={data} />
       </Grid>
     </Grid>

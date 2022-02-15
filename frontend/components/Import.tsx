@@ -423,7 +423,7 @@ export default function Import(props: {
               loadingPosition="start"
               variant="contained"
               color="secondary"
-              sx={{ my: 1 }}
+              sx={{ my: 1, height: 52 }}
             >
               Send
             </LoadingButton>

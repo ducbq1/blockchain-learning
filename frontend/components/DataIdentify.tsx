@@ -22,7 +22,7 @@ import Stack from "@mui/material/Stack";
 import Slide from "@mui/material/Slide";
 import Grow from "@mui/material/Grow";
 
-import { Box, ButtonGroup, Typography } from "@mui/material";
+import { Box, ButtonGroup, Divider, Typography } from "@mui/material";
 
 const web3 = new Web3(Web3.givenProvider || "ws://localhost:8545");
 const initContract = (addr: string) =>
@@ -313,69 +313,66 @@ export default function DataTable() {
     setOpen(true);
   };
   return (
-    <Grid
-      container
-      spacing={2}
-      direction="row"
-      justifyContent="center"
-      alignItems="center"
-    >
-      <Grid item xs={4}>
-        <FormControl sx={{ my: 1, width: 300 }}>
-          <InputLabel id="demo-controlled-open-select-label">
-            Identification
-          </InputLabel>
-          <Select
-            labelId="demo-controlled-open-select-label"
-            id="demo-controlled-open-select"
-            open={open}
-            onClose={handleClose}
-            onOpen={handleOpen}
-            value={dataSelected}
-            label="Identification"
-            onChange={handleChange}
-          >
-            {dataSelect.map((item, index) => {
-              let mergeId = item.id + "&" + item.combineId;
-              return (
-                <MenuItem key={index} value={mergeId}>
-                  {item.title}
-                </MenuItem>
-              );
-            })}
-          </Select>
-        </FormControl>
-      </Grid>
-      <Grid item xs={4}>
-        <Grow
-          in={loading}
-          style={{ transformOrigin: "0 0 0" }}
-          {...(loading ? { timeout: 1000 } : {})}
-        >
-          <Stack sx={{ width: "100%", color: "grey.500" }} spacing={2}>
-            <LinearProgress color="secondary" />
-            <LinearProgress color="success" />
-            <LinearProgress color="inherit" />
-          </Stack>
-        </Grow>
-      </Grid>
-      <Grid item xs={4}>
-        <Zoom in={dataSelected.length > 0}>
-          <ButtonGroup
-            sx={{ mr: 0 }}
-            variant="contained"
-            aria-label="outlined primary button group"
-          >
-            <Button>ID: #{dataSelected.split("&")[1]}</Button>
-            <Button onClick={handleLog}>LOG</Button>
-            <Button color="secondary" onClick={handleRemove}>
-              REMOVE
-            </Button>
-          </ButtonGroup>
-        </Zoom>
-      </Grid>
+    <Grid container spacing={2} direction="row">
       <Grid item xs={12}>
-        <Box sx={{ height: 270, width: "100%" }}>
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="center"
+        >
+          <FormControl sx={{ my: 1, width: 300 }}>
+            <InputLabel id="demo-controlled-open-select-label">
+              Identification
+            </InputLabel>
+            <Select
+              labelId="demo-controlled-open-select-label"
+              id="demo-controlled-open-select"
+              open={open}
+              onClose={handleClose}
+              onOpen={handleOpen}
+              value={dataSelected}
+              label="Identification"
+              onChange={handleChange}
+            >
+              {dataSelect.map((item, index) => {
+                let mergeId = item.id + "&" + item.combineId;
+                return (
+                  <MenuItem key={index} value={mergeId}>
+                    {item.title}
+                  </MenuItem>
+                );
+              })}
+            </Select>
+          </FormControl>
+          <Grow
+            in={loading}
+            style={{ transformOrigin: "0 0 0" }}
+            {...(loading ? { timeout: 1000 } : {})}
+          >
+            <Stack sx={{ width: "50%", color: "grey.500" }} spacing={2}>
+              <LinearProgress color="secondary" />
+              <LinearProgress color="success" />
+              <LinearProgress color="inherit" />
+            </Stack>
+          </Grow>
+          <Zoom in={dataSelected.length > 0}>
+            <ButtonGroup
+              variant="outlined"
+              sx={{ height: 55 }}
+              aria-label="outlined primary button group"
+            >
+              <Button>ID - {dataSelected.split("&")[1]}</Button>
+              <Button onClick={handleLog}>LOG</Button>
+              <Button color="secondary" onClick={handleRemove}>
+                REMOVE
+              </Button>
+            </ButtonGroup>
+          </Zoom>
+        </Stack>
+      </Grid>
+
+      <Grid item xs={12}>
+        <Box sx={{ height: 370, width: "100%" }}>
           <DataGrid
             rows={rows}
             columns={columns}
@@ -386,11 +383,15 @@ export default function DataTable() {
         </Box>
       </Grid>
       <Grid item xs={12}>
+        <Typography>The table of group address.</Typography>
+      </Grid>
+      <Divider />
+      <Grid item xs={12}>
         <img
-          src="Network-Effect-Banner2.jpg"
+          src="Network-Effect-Banner.jpg"
           alt=""
           loading="lazy"
-          height="230"
+          height="500"
           width="100%"
         />
       </Grid>
