@@ -1,0 +1,17 @@
+{
+  "name": "check",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "fastify": "^3.27.2",
+    "keccak256": "^1.0.6",
+    "merkletreejs": "^0.2.30"
+  }
+}

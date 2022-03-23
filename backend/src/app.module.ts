@@ -9,6 +9,9 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { AddressesModule } from './addresses/addresses.module';
 import { ValidateMiddleware } from './validate.middleware';
 import { StatisticModule } from './statistic/statistic.module';
+import { BooksModule } from './books/books.module';
+import { WalletsModule } from './wallets/wallets.module';
+import { TransactionsModule } from './transactions/transactions.module';
 
 @Module({
   imports: [
@@ -18,11 +21,14 @@ import { StatisticModule } from './statistic/statistic.module';
           autoLoadEntities: true,
         }),
     }),
-    UsersModule,
-    IdentifiesModule,
-    NotificationsModule,
+    // UsersModule,
+    // IdentifiesModule,
+    // NotificationsModule,
     AddressesModule,
-    StatisticModule,
+    // StatisticModule,
+    BooksModule,
+    WalletsModule,
+    TransactionsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

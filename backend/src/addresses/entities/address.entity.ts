@@ -1,4 +1,5 @@
 import { Identify } from 'src/identifies/entities/identify.entity';
+import { Transaction } from 'src/transactions/entities/transaction.entity';
 import {
   Entity,
   Column,
@@ -15,20 +16,20 @@ export class Address {
   @PrimaryColumn()
   id: string;
 
-  @Column()
-  message: string;
+  // @Column()
+  // message: string;
 
   @Column()
   address: string;
 
-  @Column()
-  infuralNetworks: string;
+  // @Column()
+  // infuralNetworks: string;
 
   @Column()
   signature: string;
 
-  @Column({ default: true })
-  isVerify: boolean;
+  // @Column({ default: true })
+  // isVerify: boolean;
 
   @CreateDateColumn()
   createdAt!: Date;
@@ -39,6 +40,6 @@ export class Address {
   @DeleteDateColumn()
   deletedAt?: Date;
 
-  @ManyToOne(() => Identify, (identify) => identify.addresses)
-  identify: Identify;
+  @ManyToOne(() => Transaction, (transaction) => transaction.addresses)
+  transaction: Transaction;
 }

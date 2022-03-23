@@ -19,8 +19,8 @@ import PageviewIcon from "@mui/icons-material/Pageview";
 import GppMaybeIcon from "@mui/icons-material/GppMaybe";
 import GppGoodIcon from "@mui/icons-material/GppGood";
 import Web3 from "web3";
-import { abi } from "../contracts/ChainIdentification";
-import { addressContract } from "../contracts/AddressContract";
+import { abiOwnerManager } from "../contracts/OwnerManager";
+import { factoryAddress } from "../contracts/FactoryAddress";
 import Stack from "@mui/material/Stack";
 import Slide from "@mui/material/Slide";
 import Grow from "@mui/material/Grow";
@@ -39,7 +39,6 @@ import {
 } from "chart.js";
 import { Bar } from "react-chartjs-2";
 import faker from "@faker-js/faker";
-const web3 = new Web3(Web3.givenProvider || "ws://localhost:8545");
 
 // ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -84,6 +83,10 @@ export const options = {
 //   ],
 // };
 
+const web3 = new Web3(Web3.givenProvider || "ws://localhost:8545");
+const initContract = (addr: string) =>
+  new web3.eth.Contract(abiOwnerManager as any[], addr);
+
 export default function Statistic() {
   const [data, setData] = React.useState({ labels: [], datasets: [] });
   const [age, setAge] = React.useState<string | number>("");
@@ -95,8 +98,9 @@ export default function Statistic() {
   const [eachTransaction, setEachTransaction] = React.useState([]);
   const [balance, setBalance] = React.useState([0, 0]);
   const [open, setOpen] = React.useState(false);
-  const { messageContext, accountContext, addressContext, signatureContext } =
+  const { accountContext, addressContext, signatureContext } =
     React.useContext(StoreContext);
+
   const [accounts, setAccounts] = accountContext;
   const [loading, setLoading] = React.useState(false);
 
@@ -106,17 +110,17 @@ export default function Statistic() {
       return;
     }
 
-    try {
-      axios
-        .get(
-          `http://${window.location.hostname}:4000/addresses/identify/${accounts[0]}`
-        )
-        .then((response) => {
-          setDataSelect(response.data);
-        });
-    } catch (err) {
-      console.error(err);
-    }
+    // try {
+    //   axios
+    //     .get(
+    //       `http://${window.location.hostname}:4000/addresses/identify/${accounts[0]}`
+    //     )
+    //     .then((response) => {
+    //       setDataSelect(response.data);
+    //     });
+    // } catch (err) {
+    //   console.error(err);
+    // }
   }, [accounts]);
 
   React.useEffect(() => {

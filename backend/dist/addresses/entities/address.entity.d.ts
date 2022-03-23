@@ -1,13 +1,10 @@
-import { Identify } from 'src/identifies/entities/identify.entity';
+import { Transaction } from 'src/transactions/entities/transaction.entity';
 export declare class Address {
     id: string;
-    message: string;
     address: string;
-    infuralNetworks: string;
     signature: string;
-    isVerify: boolean;
     createdAt: Date;
     updatedAt: Date;
     deletedAt?: Date;
-    identify: Identify;
+    transaction: Transaction;
 }

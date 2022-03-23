@@ -18,14 +18,14 @@ export class Identify {
   @Column()
   title: string;
 
-  @Column()
-  message: string;
+  // @Column()
+  // message: string;
+
+  // @Column()
+  // balance: number;
 
   @Column()
-  balance: number;
-
-  @Column()
-  combineId: number;
+  address: string;
 
   @CreateDateColumn()
   createdAt!: Date;
@@ -36,6 +36,6 @@ export class Identify {
   @DeleteDateColumn()
   deletedAt?: Date;
 
-  @OneToMany(() => Address, (address) => address.identify)
-  addresses: Address[];
+  // @OneToMany(() => Address, (address) => address.identify)
+  // addresses: Address[];
 }

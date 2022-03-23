@@ -28,37 +28,11 @@ let IdentifiesService = class IdentifiesService {
     findAll() {
         return this.idenfifiesRepository.find();
     }
-    async findAddresses(id) {
-        const item = await this.idenfifiesRepository.findOne(id, {
-            relations: ['addresses'],
-        });
-        return item.addresses;
-    }
-    async insertAddresses(combineId, createAddressDto) {
-        const identifyItem = await this.idenfifiesRepository.findOne({
-            where: { combineId: combineId },
-            relations: ['addresses'],
-        });
-        if (identifyItem == undefined ||
-            identifyItem.addresses.some((element) => element.address == createAddressDto.address)) {
-            return new typeorm_2.InsertResult();
-        }
-        const address = this.addressesRepository.create(createAddressDto);
-        address.identify = identifyItem;
-        return await this.addressesRepository.insert(address);
-    }
     findOne(id) {
         return this.idenfifiesRepository.findOne(id);
     }
     async delete(id) {
         return await this.idenfifiesRepository.delete(id);
-    }
-    async softDelete(id) {
-        const firstItem = await this.idenfifiesRepository.findOne(id, {
-            relations: ['addresses'],
-        });
-        await this.addressesRepository.softRemove(firstItem.addresses);
-        return await this.idenfifiesRepository.softDelete(id);
     }
     async restore(id) {
         return await this.idenfifiesRepository.restore(id);

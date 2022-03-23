@@ -7,13 +7,13 @@ import { Identify } from '../entities/identify.entity';
 export interface Identifies {
   findAll(): Promise<Identify[]>;
 
-  findAddresses(id: string): Promise<Address[]>;
+  // findAddresses(id: string): Promise<Address[]>;
 
   findOne(id: string): Promise<Identify>;
 
   delete(id: string): Promise<DeleteResult>;
 
-  softDelete(id: string): Promise<UpdateResult>;
+  // softDelete(id: string): Promise<UpdateResult>;
 
   restore(id: string): Promise<UpdateResult>;
 

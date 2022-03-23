@@ -4,15 +4,9 @@ import { UpdateAddressDto } from './dto/update-address.dto';
 export declare class AddressesController {
     private readonly addressesService;
     constructor(addressesService: AddressesService);
-    findAll(sort: boolean): Promise<import("./entities/address.entity").Address[]>;
-    findOne(uuid: string): Promise<import("./entities/address.entity").Address>;
-    findIdentify(address: string): Promise<import("../identifies/entities/identify.entity").Identify[]>;
+    findAll(uuid: string): Promise<import("./entities/address.entity").Address[]>;
     create(createAddressDto: CreateAddressDto): Promise<import("./entities/address.entity").Address>;
     restore(uuid: string): Promise<import("typeorm").UpdateResult>;
-    updateStatus(payload: {
-        id: string;
-        isVerify: boolean;
-    }): Promise<import("typeorm").UpdateResult>;
-    remove(uuid: string): Promise<import("typeorm").UpdateResult>;
+    remove(uuid: string): Promise<import("typeorm").DeleteResult>;
     update(updateAddressDto: UpdateAddressDto): Promise<import("typeorm").UpdateResult>;
 }

@@ -15,12 +15,11 @@ const app_controller_1 = require("./app.controller");
 const app_service_1 = require("./app.service");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
-const users_module_1 = require("./users/users.module");
-const identifies_module_1 = require("./identifies/identifies.module");
-const notifications_module_1 = require("./notifications/notifications.module");
 const addresses_module_1 = require("./addresses/addresses.module");
 const validate_middleware_1 = require("./validate.middleware");
-const statistic_module_1 = require("./statistic/statistic.module");
+const books_module_1 = require("./books/books.module");
+const wallets_module_1 = require("./wallets/wallets.module");
+const transactions_module_1 = require("./transactions/transactions.module");
 let AppModule = class AppModule {
     constructor(connection) {
         this.connection = connection;
@@ -39,11 +38,10 @@ AppModule = __decorate([
                     autoLoadEntities: true,
                 }),
             }),
-            users_module_1.UsersModule,
-            identifies_module_1.IdentifiesModule,
-            notifications_module_1.NotificationsModule,
             addresses_module_1.AddressesModule,
-            statistic_module_1.StatisticModule,
+            books_module_1.BooksModule,
+            wallets_module_1.WalletsModule,
+            transactions_module_1.TransactionsModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],

@@ -16,27 +16,22 @@ exports.AddressesService = void 0;
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const identify_entity_1 = require("../identifies/entities/identify.entity");
+const transaction_entity_1 = require("../transactions/entities/transaction.entity");
 const typeorm_2 = require("typeorm");
 const address_entity_1 = require("./entities/address.entity");
 let AddressesService = class AddressesService {
-    constructor(addressesRepository, identifiesRepository) {
+    constructor(addressesRepository, transactionsRepository) {
         this.addressesRepository = addressesRepository;
-        this.identifiesRepository = identifiesRepository;
+        this.transactionsRepository = transactionsRepository;
     }
-    async findAll(sort) {
-        if (sort) {
-            return this.addressesRepository.find({ order: { message: 'ASC' } });
-        }
-        else {
-            return this.addressesRepository.find({ order: { message: 'DESC' } });
-        }
-    }
-    async findIdentify(address) {
-        const item = await this.addressesRepository.find({
-            where: { address: address },
-            relations: ['identify'],
+    async findAll(uuid) {
+        const transactionInstance = await this.transactionsRepository.findOne({
+            where: {
+                id: uuid,
+            },
+            relations: ['addresses'],
         });
-        return item.map((it) => it.identify);
+        return transactionInstance.addresses;
     }
     async findOne(id) {
         return this.addressesRepository.findOne(id);
@@ -50,18 +45,19 @@ let AddressesService = class AddressesService {
     async restore(id) {
         return this.addressesRepository.restore(id);
     }
-    async updateStatus(id, isVerify) {
-        return this.addressesRepository.update(id, {
-            isVerify: isVerify,
-        });
-    }
     async update(updateAddressDto) {
         return this.addressesRepository.update(updateAddressDto.id, updateAddressDto);
     }
     async create(createAddressDto) {
-        const identify = await this.identifiesRepository.findOne(createAddressDto.identifyId);
+        const transactionInstance = await this.transactionsRepository.findOne({
+            where: { id: createAddressDto.transactionId },
+            relations: ['addresses'],
+        });
+        if (transactionInstance.addresses.some((item) => item.signature == createAddressDto.signature)) {
+            return new address_entity_1.Address();
+        }
         const address = this.addressesRepository.create(createAddressDto);
-        address.identify = identify;
+        address.transaction = transactionInstance;
         return this.addressesRepository.save(address);
     }
     insert(createAddressDto) {
@@ -71,7 +67,7 @@ let AddressesService = class AddressesService {
 AddressesService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(address_entity_1.Address)),
-    __param(1, (0, typeorm_1.InjectRepository)(identify_entity_1.Identify)),
+    __param(1, (0, typeorm_1.InjectRepository)(transaction_entity_1.Transaction)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
         typeorm_2.Repository])
 ], AddressesService);

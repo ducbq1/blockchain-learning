@@ -24,33 +24,33 @@ export class IdentifiesService implements Identifies {
     return this.idenfifiesRepository.find();
   }
 
-  async findAddresses(id: string): Promise<Address[]> {
-    const item = await this.idenfifiesRepository.findOne(id, {
-      relations: ['addresses'],
-    });
-    return item.addresses;
-  }
+  // async findAddresses(id: string): Promise<Address[]> {
+  //   const item = await this.idenfifiesRepository.findOne(id, {
+  //     relations: ['addresses'],
+  //   });
+  //   return item.addresses;
+  // }
 
-  async insertAddresses(
-    combineId: number,
-    createAddressDto: CreateAddressDto,
-  ): Promise<InsertResult> {
-    const identifyItem = await this.idenfifiesRepository.findOne({
-      where: { combineId: combineId },
-      relations: ['addresses'],
-    });
-    if (
-      identifyItem == undefined ||
-      identifyItem.addresses.some(
-        (element: Address) => element.address == createAddressDto.address,
-      )
-    ) {
-      return new InsertResult();
-    }
-    const address = this.addressesRepository.create(createAddressDto);
-    address.identify = identifyItem;
-    return await this.addressesRepository.insert(address);
-  }
+  // async insertAddresses_Temp(
+  //   combineId: number,
+  //   createAddressDto: CreateAddressDto,
+  // ): Promise<InsertResult> {
+  //   const identifyItem = await this.idenfifiesRepository.findOne({
+  //     where: { combineId: combineId },
+  //     relations: ['addresses'],
+  //   });
+  //   if (
+  //     identifyItem == undefined ||
+  //     identifyItem.addresses.some(
+  //       (element: Address) => element.address == createAddressDto.address,
+  //     )
+  //   ) {
+  //     return new InsertResult();
+  //   }
+  //   const address = this.addressesRepository.create(createAddressDto);
+  //   address.identify = identifyItem;
+  //   return await this.addressesRepository.insert(address);
+  // }
 
   findOne(id: string): Promise<Identify> {
     return this.idenfifiesRepository.findOne(id);
@@ -60,13 +60,13 @@ export class IdentifiesService implements Identifies {
     return await this.idenfifiesRepository.delete(id);
   }
 
-  async softDelete(id: string): Promise<UpdateResult> {
-    const firstItem = await this.idenfifiesRepository.findOne(id, {
-      relations: ['addresses'],
-    });
-    await this.addressesRepository.softRemove(firstItem.addresses);
-    return await this.idenfifiesRepository.softDelete(id);
-  }
+  // async softDelete(id: string): Promise<UpdateResult> {
+  //   const firstItem = await this.idenfifiesRepository.findOne(id, {
+  //     relations: ['addresses'],
+  //   });
+  //   await this.addressesRepository.softRemove(firstItem.addresses);
+  //   return await this.idenfifiesRepository.softDelete(id);
+  // }
 
   async restore(id: string): Promise<UpdateResult> {
     return await this.idenfifiesRepository.restore(id);

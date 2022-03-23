@@ -10,7 +10,7 @@ export default function Layout({ children }) {
         style={{
           position: "relative",
           width: "99%",
-          top: 230,
+          top: 530,
           textAlign: "center",
         }}
       >

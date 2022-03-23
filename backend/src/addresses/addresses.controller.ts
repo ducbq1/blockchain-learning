@@ -19,23 +19,23 @@ import { UpdateAddressDto } from './dto/update-address.dto';
 export class AddressesController {
   constructor(private readonly addressesService: AddressesService) {}
 
-  @Get()
-  findAll(@Query('sort', new ParseBoolPipe()) sort: boolean) {
-    if (typeof sort === 'boolean') {
-      console.log('Addresses are sorted!');
-    }
-    return this.addressesService.findAll(sort);
-  }
+  // @Get()
+  // findAll(@Query('sort', new ParseBoolPipe()) sort: boolean) {
+  //   if (typeof sort === 'boolean') {
+  //     console.log('Addresses are sorted!');
+  //   }
+  //   return this.addressesService.findAll(sort);
+  // }
 
   @Get(':uuid')
-  findOne(@Param('uuid', new ParseUUIDPipe()) uuid: string) {
-    return this.addressesService.findOne(uuid);
+  findAll(@Param('uuid', new ParseUUIDPipe()) uuid: string) {
+    return this.addressesService.findAll(uuid);
   }
 
-  @Get('identify/:address')
-  findIdentify(@Param('address') address: string) {
-    return this.addressesService.findIdentify(address);
-  }
+  // @Get('identify/:address')
+  // findIdentify(@Param('address') address: string) {
+  //   return this.addressesService.findIdentify(address);
+  // }
 
   @Post()
   create(@Body() createAddressDto: CreateAddressDto) {
@@ -47,17 +47,17 @@ export class AddressesController {
     return this.addressesService.restore(uuid);
   }
 
-  @Patch()
-  updateStatus(@Body() payload: { id: string; isVerify: boolean }) {
-    return this.addressesService.updateStatus(payload.id, payload.isVerify);
-  }
+  // @Patch()
+  // updateStatus(@Body() payload: { id: string; isVerify: boolean }) {
+  //   return this.addressesService.updateStatus(payload.id, payload.isVerify);
+  // }
 
   @Delete(':uuid')
   remove(@Param('uuid', new ParseUUIDPipe()) uuid: string) {
-    return this.addressesService.softDelete(uuid);
+    return this.addressesService.delete(uuid);
   }
 
-  @Put()
+  @Patch()
   update(@Body() updateAddressDto: UpdateAddressDto) {
     return this.addressesService.update(updateAddressDto);
   }

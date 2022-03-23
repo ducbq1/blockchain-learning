@@ -22,7 +22,7 @@ function MediaCard({
         image="104939467-Blockchain_Industry_Thumb_00000.jpg"
         alt="green iguana"
       />
-      <CardContent>
+      {/* <CardContent>
         <Divider />
         <Typography variant="body1" my={0.5} style={{ fontWeight: 600 }}>
           Identification
@@ -49,7 +49,7 @@ function MediaCard({
       <CardActions>
         <Button size="small">Share</Button>
         <Button size="small">Learn More</Button>
-      </CardActions>
+      </CardActions> */}
     </Card>
   );
 }

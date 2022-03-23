@@ -18,21 +18,25 @@ import {
 import { randomBytes } from "crypto";
 import Grid from "../components/Grid";
 import Card from "../components/Card";
-import DataIdentify from "../components/DataIdentify";
+import Manager from "../components/Manager";
 import MetaMaskOnboarding from "@metamask/onboarding";
-import { StoreContext } from "../store";
 import Web3 from "web3";
 import Link from "next/link";
-
 import { LoadingButton } from "@mui/lab";
 import ExitToAppIcon from "@mui/icons-material/ExitToApp";
 import Statistic from "../components/Statistic";
+import AddressBook from "../components/AddressBook";
+import Transactions from "../components/Transactions";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
 import PageviewIcon from "@mui/icons-material/Pageview";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import IosShareIcon from "@mui/icons-material/IosShare";
 import Tooltip from "@mui/material/Tooltip";
+import { factoryAddress } from "../contracts/FactoryAddress";
+import { abiFactory } from "../contracts/Factory";
+import { StoreContext } from "../store";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 
 const ONBOARD_TEXT: string = "Install MetaMask!";
 const CONNECT_TEXT: string = "Connect Wallet";
@@ -48,7 +52,7 @@ const style = {
   width: 500,
   bgcolor: "background.paper",
   border: "2px #000",
-  borderRadius: 2,
+  borderRadius: 1,
   boxShadow: 24,
   p: 4,
 };
@@ -74,8 +78,9 @@ function TabPanel(props: TabPanelProps) {
   return (
     <>
       {value === 0 && <Grid />}
-      {value === 1 && <DataIdentify />}
-      {value === 2 && <Statistic />}
+      {value === 1 && <Manager />}
+      {value === 2 && <AddressBook />}
+      {value === 3 && <Statistic />}
     </>
   );
 }
@@ -87,24 +92,38 @@ function a11yProps(index: number) {
   };
 }
 
-const messageVerify = "0x" + randomBytes(32).toString("hex");
+// const messageVerify = "0x" + randomBytes(32).toString("hex");
 const web3 = new Web3(Web3.givenProvider || "ws://localhost:8545");
+const initContract = (addr: string) =>
+  new web3.eth.Contract(abiFactory as any[], addr);
 
 export default function Index() {
-  const { messageContext, accountContext, addressContext, signatureContext } =
+  const { accountContext, addressContext, signatureContext } =
     React.useContext(StoreContext);
   const [accounts, setAccounts]: [Array<string>, any] = accountContext;
-  const [address, setAddress] = addressContext;
+  const [address, setAddress]: [
+    Array<{
+      account: string;
+      status: boolean;
+    }>,
+    any
+  ] = addressContext;
   const [signature, setSignature] = signatureContext;
-  const [message, setMessage] = messageContext;
+  // const [message, setMessage] = messageContext;
   const [buttonText, setButtonText] = React.useState(NOT_CONNECT_TEXT);
   const [buttonTextAddress, setButtonTextAddress] =
     React.useState(ONBOARD_TEXT);
   const [value, setValue] = React.useState(0);
   const [loading, setLoading] = React.useState(false);
-  const [chainId, setChainId] = React.useState("");
+  const [balance, setBalance] = React.useState(0);
+  const [networkType, setNetworkType] = React.useState("");
+
+  // web3.eth.net.getId().then(console.log);
+  // web3.eth.getChainId().then(console.log);
+  // web3.eth.getNodeInfo().then(console.log);
+
   const onboarding = React.useRef<MetaMaskOnboarding>();
-  const [open, setOpen] = React.useState(false);
+  const [openModal, setOpenModal] = React.useState(false);
   const [copyText, setCopyText] = React.useState("Copy");
 
   React.useEffect(() => {
@@ -114,50 +133,99 @@ export default function Index() {
   }, []);
 
   React.useEffect(() => {
-    async function checkBlocks(start, end) {
-      for (let i = start; i < end; i++) {
-        let block = await web3.eth.getBlock(i);
-        console.log(`[*] Searching block ${i}`);
-        if (block && block.transactions) {
-          for (let txHash of block.transactions) {
-            let tx = await web3.eth.getTransaction(txHash);
-            if (
-              tx.to !== null &&
-              accounts[0].toLowerCase() === tx.to.toLowerCase()
-            ) {
-              console.log(`[*] Transaction found on block ${i}`);
-              console.log({
-                address: tx.from,
-                value: web3.utils.fromWei(tx.value, "ether"),
-                timestamp: new Date(),
-              });
-            }
-          }
-        }
-      }
-    }
+    async function setData(account: string) {
+      // setAddress(address.add(account));
+      // setAddress(
+      //   address.add("0x" + chainId.slice(2).padStart(2, "0") + account.slice(2))
+      // );
 
-    web3.eth.getBlock("latest").then((element) => {
-      checkBlocks(0, 3);
-    });
+      const domain = [
+        { name: "name", type: "string" },
+        { name: "version", type: "string" },
+        { name: "chainId", type: "uint256" },
+        { name: "verifyingContract", type: "address" },
+      ];
 
-    async function handleSet(
-      message: string,
-      chainId: string,
-      account: string
-    ) {
-      setAddress(
-        address.add("0x" + chainId.slice(2).padStart(2, "0") + account.slice(2))
-      );
-      const sign = await web3.eth.sign(message, account);
-      setSignature(signature.add(sign));
+      const transaction = [
+        { name: "destination", type: "address" },
+        { name: "value", type: "uint256" },
+        { name: "data", type: "bytes" },
+      ];
+
+      const authority = [
+        { name: "name", type: "string" },
+        { name: "wallet", type: "address" },
+      ];
+
+      const msgParam = JSON.stringify({
+        types: {
+          EIP712Domain: domain,
+          Transaction: transaction,
+        },
+        domain: {
+          name: "EIP712",
+          version: "1.0.1",
+          chainId: "3",
+          verifyingContract: "0xDA0bab807633f07f013f94DD0E6A4F96F8742B53",
+        },
+        primaryType: "Transaction",
+        message: {
+          destination: "0xDA0bab807633f07f013f94DD0E6A4F96F8742B53",
+          value: 0,
+          data: "0x0338f63a0000000000000000000000003aa528b07d997b2e78e7bfb96fdfb7ca31ce0e4600000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000041f93c3cf37405bc8b8617fd685a3cc1c2fe62e9847f58aa19cc10616b5180fc55003481a6218e3728e8073c6ebcc50016e95ad2c7bf6f30240a5a4369b96c24e91b00000000000000000000000000000000000000000000000000000000000000",
+        },
+      });
+
+      // window.ethereum
+      //   .request({
+      //     method: "eth_signTypedData_v4",
+      //     params: [account, msgParam],
+      //   })
+      //   .then((result) => console.log(result));
+
+      // if (address.every((element: string) => element != account)) {
+      //   setAddress([...address, account]);
+      // }
+
+      window.ethereum
+        .request({
+          method: "personal_sign",
+          params: ["Authorize", account],
+        })
+        .then((sign) => setSignature(signature.add(sign)));
+
+      // setAddress(
+      //   address.add("0x" + chainId.slice(2).padStart(2, "0") + account.slice(2))
+      // );
+      // setAddress(address.add(account));
+      // setSignature(signature.add(sign));
     }
-    setMessage(messageVerify);
+    // setMessage(messageVerify);
     if (MetaMaskOnboarding.isMetaMaskInstalled()) {
       if (accounts.length > 0) {
+        if (address.every((element) => element.account != accounts[0])) {
+          setAddress([
+            ...address,
+            {
+              account: accounts[0],
+              status: 0,
+              index: address.length,
+            },
+          ]);
+        }
+        // setData(accounts[0]);
+        web3.eth
+          .getBalance(accounts[0])
+          .then((item: any) => setBalance(item / 10 ** 18));
+        web3.eth.net
+          .getNetworkType()
+          .then((item) =>
+            setNetworkType(item.charAt(0).toUpperCase() + item.slice(1))
+          );
         setButtonText(CONNECTED_TEXT);
         setButtonTextAddress(accounts[0].substring(0, 10).concat("..."));
-        handleSet(message, chainId, accounts[0]);
+        // setAddress([...address, accounts[0]]);
+        // setData(accounts[0], chainId);
         onboarding.current.stopOnboarding();
       } else {
         setButtonText(NOT_CONNECT_TEXT);
@@ -167,23 +235,16 @@ export default function Index() {
   }, [accounts]);
 
   React.useEffect(() => {
-    async function handleAccounts() {
-      const newAccounts = await window.ethereum.request({
-        method: "eth_requestAccounts",
-      });
-      const newChainId = await window.ethereum.request({
-        method: "eth_chainId",
-      });
-      setChainId(newChainId);
-      setAccounts(newAccounts);
-    }
     if (MetaMaskOnboarding.isMetaMaskInstalled()) {
-      handleAccounts();
+      window.ethereum
+        .request({
+          method: "eth_requestAccounts",
+        })
+        .then(setAccounts);
       window.ethereum.on("accountsChanged", (accounts: string[]) =>
         setAccounts(accounts)
       );
       window.ethereum.on("chainChanged", (chainId: string) => {
-        setChainId(chainId);
         window.location.reload();
       });
       return () => {
@@ -203,42 +264,36 @@ export default function Index() {
           setAccounts(accounts)
         );
         window.ethereum.on("chainChanged", (chainId: string) => {
-          setChainId(chainId);
+          // setChainId(chainId);
           window.location.reload();
         });
         setTimeout(() => {
           window.ethereum
             .request({ method: "eth_requestAccounts" })
             .then((newAccounts: string[]) => setAccounts(newAccounts));
-          window.ethereum
-            .request({ method: "eth_chainId" })
-            .then((newChainId: string) => setChainId(newChainId));
+          // window.ethereum
+          //   .request({ method: "eth_chainId" })
+          //   .then((newChainId: string) => setChainId(newChainId));
           setLoading(false);
         }, 500);
       } else {
-        handleOpen();
+        setOpenModal(true);
       }
     } else {
       onboarding.current.startOnboarding();
     }
   }
 
-  function handleOpen() {
-    setOpen(true);
-  }
-
-  function handleClose() {
-    setOpen(false);
-  }
-
   function onDisconnect(event: React.SyntheticEvent) {
-    setOpen(false);
+    setOpenModal(false);
     setLoading(true);
     setTimeout(() => {
       setButtonText(CONNECT_TEXT);
       setAccounts([]);
-      setAddress(new Set());
-      setSignature(new Set());
+      // setAddress(new Set());
+      // setSignature(new Set());
+      setAddress([]);
+      setSignature([]);
       window.ethereum.removeAllListeners("accountsChanged");
       window.ethereum.removeAllListeners("chainChanged");
       setLoading(false);
@@ -259,9 +314,9 @@ export default function Index() {
     setValue(newValue);
   };
 
-  const handleMessage = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setMessage(event.target.value);
-  };
+  // const handleMessage = (event: React.ChangeEvent<HTMLInputElement>) => {
+  //   setMessage(event.target.value);
+  // };
 
   return (
     <>
@@ -272,7 +327,10 @@ export default function Index() {
         <AppBar position="static">
           <Toolbar>
             <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-              Cross Chain Identification
+              Balance: {balance.toPrecision(5)} ETH
+            </Typography>
+            <Typography variant="h6" component="div" sx={{ flexGrow: 8 }}>
+              {networkType}
             </Typography>
             {/* <LoadingButton
               color="inherit"
@@ -283,6 +341,7 @@ export default function Index() {
             >
               Disconnect
             </LoadingButton> */}
+
             <LoadingButton
               color="inherit"
               onClick={onConnect}
@@ -299,8 +358,8 @@ export default function Index() {
             </LoadingButton>
           </Toolbar>
         </AppBar>
-        <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 2 }}>
-          <TextField
+        <Box sx={{ borderBottom: 1, borderColor: "divider", my: 2 }}>
+          {/* <TextField
             id="outlined-basic"
             label="Message"
             variant="outlined"
@@ -308,7 +367,7 @@ export default function Index() {
             defaultValue={messageVerify}
             onChange={handleMessage}
             inputProps={{ maxLength: 66 }}
-          />
+          /> */}
           <Tabs
             value={value}
             onChange={handleChange}
@@ -317,14 +376,17 @@ export default function Index() {
           >
             <Tab label="identification" {...a11yProps(0)} />
             <Tab label="asset manager" {...a11yProps(1)} />
-            <Tab label="statistic" {...a11yProps(2)} />
+            <Tab label="address book" {...a11yProps(2)} />
+            <Tab label="statistic" {...a11yProps(3)} />
           </Tabs>
         </Box>
         <TabPanel value={value} index={0} />
-        <Modal open={open} onClose={handleClose}>
+        <Modal open={openModal} onClose={() => setOpenModal(false)}>
           <Box sx={style}>
             <Stack>
-              <Typography variant="h5">Wallet Connection</Typography>
+              <Typography variant="h5" sx={{ mb: 1 }}>
+                Wallet Connection
+              </Typography>
               <Divider />
               <Stack
                 sx={{ my: 2 }}
@@ -356,10 +418,16 @@ export default function Index() {
                 <Link
                   href={`https://ropsten.etherscan.io/address/${accounts[0]}`}
                 >
-                  <a target="_blank">
-                    <Typography>
-                      View on Etherscan <IosShareIcon />
-                    </Typography>
+                  <a
+                    target="_blank"
+                    style={{
+                      textDecoration: "none",
+                      display: "flex",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Typography>View on Etherscan</Typography>&nbsp;
+                    <OpenInNewIcon sx={{ fontSize: 18 }} />
                   </a>
                 </Link>
                 <Button

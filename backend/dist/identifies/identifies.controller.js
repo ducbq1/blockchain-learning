@@ -28,17 +28,8 @@ let IdentifiesController = class IdentifiesController {
     findOne(uuid) {
         return this.identifiesService.findOne(uuid);
     }
-    findAddresses(uuid) {
-        return this.identifiesService.findAddresses(uuid);
-    }
-    remove(uuid) {
-        return this.identifiesService.softDelete(uuid);
-    }
     restore(uuid) {
         return this.identifiesService.restore(uuid);
-    }
-    insertAddresses(combineId, createAddressDto) {
-        return this.identifiesService.insertAddresses(combineId, createAddressDto);
     }
     create(createIdentifyDto) {
         return this.identifiesService.create(createIdentifyDto);
@@ -61,34 +52,12 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], IdentifiesController.prototype, "findOne", null);
 __decorate([
-    (0, common_1.Get)('addresses/:uuid'),
-    __param(0, (0, common_1.Param)('uuid', new common_1.ParseUUIDPipe())),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", void 0)
-], IdentifiesController.prototype, "findAddresses", null);
-__decorate([
-    (0, common_1.Delete)(':uuid'),
-    __param(0, (0, common_1.Param)('uuid')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", void 0)
-], IdentifiesController.prototype, "remove", null);
-__decorate([
     (0, common_1.Patch)(':uuid'),
     __param(0, (0, common_1.Param)('uuid')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], IdentifiesController.prototype, "restore", null);
-__decorate([
-    (0, common_1.Post)('address/:combineId'),
-    __param(0, (0, common_1.Param)('combineId', new common_1.ParseIntPipe({ errorHttpStatusCode: common_1.HttpStatus.NOT_ACCEPTABLE }))),
-    __param(1, (0, common_1.Body)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, create_address_dto_1.CreateAddressDto]),
-    __metadata("design:returntype", void 0)
-], IdentifiesController.prototype, "insertAddresses", null);
 __decorate([
     (0, common_1.Post)(),
     __param(0, (0, common_1.Body)()),

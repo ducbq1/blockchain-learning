@@ -21,17 +21,8 @@ let AddressesController = class AddressesController {
     constructor(addressesService) {
         this.addressesService = addressesService;
     }
-    findAll(sort) {
-        if (typeof sort === 'boolean') {
-            console.log('Addresses are sorted!');
-        }
-        return this.addressesService.findAll(sort);
-    }
-    findOne(uuid) {
-        return this.addressesService.findOne(uuid);
-    }
-    findIdentify(address) {
-        return this.addressesService.findIdentify(address);
+    findAll(uuid) {
+        return this.addressesService.findAll(uuid);
     }
     create(createAddressDto) {
         return this.addressesService.create(createAddressDto);
@@ -39,37 +30,20 @@ let AddressesController = class AddressesController {
     restore(uuid) {
         return this.addressesService.restore(uuid);
     }
-    updateStatus(payload) {
-        return this.addressesService.updateStatus(payload.id, payload.isVerify);
-    }
     remove(uuid) {
-        return this.addressesService.softDelete(uuid);
+        return this.addressesService.delete(uuid);
     }
     update(updateAddressDto) {
         return this.addressesService.update(updateAddressDto);
     }
 };
 __decorate([
-    (0, common_1.Get)(),
-    __param(0, (0, common_1.Query)('sort', new common_1.ParseBoolPipe())),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Boolean]),
-    __metadata("design:returntype", void 0)
-], AddressesController.prototype, "findAll", null);
-__decorate([
     (0, common_1.Get)(':uuid'),
     __param(0, (0, common_1.Param)('uuid', new common_1.ParseUUIDPipe())),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
-], AddressesController.prototype, "findOne", null);
-__decorate([
-    (0, common_1.Get)('identify/:address'),
-    __param(0, (0, common_1.Param)('address')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", void 0)
-], AddressesController.prototype, "findIdentify", null);
+], AddressesController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Post)(),
     __param(0, (0, common_1.Body)()),
@@ -85,13 +59,6 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], AddressesController.prototype, "restore", null);
 __decorate([
-    (0, common_1.Patch)(),
-    __param(0, (0, common_1.Body)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
-    __metadata("design:returntype", void 0)
-], AddressesController.prototype, "updateStatus", null);
-__decorate([
     (0, common_1.Delete)(':uuid'),
     __param(0, (0, common_1.Param)('uuid', new common_1.ParseUUIDPipe())),
     __metadata("design:type", Function),
@@ -99,7 +66,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], AddressesController.prototype, "remove", null);
 __decorate([
-    (0, common_1.Put)(),
+    (0, common_1.Patch)(),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [update_address_dto_1.UpdateAddressDto]),

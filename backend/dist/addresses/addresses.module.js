@@ -13,11 +13,12 @@ const addresses_controller_1 = require("./addresses.controller");
 const typeorm_1 = require("@nestjs/typeorm");
 const address_entity_1 = require("./entities/address.entity");
 const identify_entity_1 = require("../identifies/entities/identify.entity");
+const transaction_entity_1 = require("../transactions/entities/transaction.entity");
 let AddressesModule = class AddressesModule {
 };
 AddressesModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([address_entity_1.Address, identify_entity_1.Identify])],
+        imports: [typeorm_1.TypeOrmModule.forFeature([address_entity_1.Address, transaction_entity_1.Transaction])],
         controllers: [addresses_controller_1.AddressesController],
         providers: [addresses_service_1.AddressesService],
     })
