@@ -32,7 +32,6 @@ export class TransactionsService {
   async update(
     updateTransactionDto: UpdateTransactionDto,
   ): Promise<UpdateResult> {
-    console.log(updateTransactionDto);
     return await this.transactionsRepository.update(
       updateTransactionDto.id,
       updateTransactionDto,

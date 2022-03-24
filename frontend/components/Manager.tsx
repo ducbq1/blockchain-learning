@@ -1249,7 +1249,7 @@ export default function Manager() {
       </Grid>
 
       <Grid item xs={12}>
-        <Box sx={{ height: 370, width: "100%" }}>
+        <Box sx={{ height: 250, width: "100%" }}>
           <DataGrid
             rows={rowsOwners}
             columns={columnsOwners}

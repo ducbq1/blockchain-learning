@@ -127,6 +127,8 @@ contract OwnerManager {
     {
         isOwner[owner] = true;
         owners.push(owner);
+        threshold += 1;
+        emit ThresholdChange(threshold);
         emit OwnerAddition(owner);
     }
 

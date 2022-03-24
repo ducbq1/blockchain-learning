@@ -34,7 +34,6 @@ let TransactionsService = class TransactionsService {
         return await this.transactionsRepository.save(transaction);
     }
     async update(updateTransactionDto) {
-        console.log(updateTransactionDto);
         return await this.transactionsRepository.update(updateTransactionDto.id, updateTransactionDto);
     }
     async findAll(address) {
