@@ -6,7 +6,7 @@ export default function Layout({ children }) {
   return (
     <>
       <main>{children}</main>
-      <div
+      {/* <div
         style={{
           position: "relative",
           width: "99%",
@@ -15,7 +15,7 @@ export default function Layout({ children }) {
         }}
       >
         <Footer />
-      </div>
+      </div> */}
     </>
   );
 }

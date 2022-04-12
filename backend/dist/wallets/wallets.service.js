@@ -25,13 +25,37 @@ let WalletsService = class WalletsService {
         return await this.walletsRepository.save(createWalletDto);
     }
     findAll() {
-        return this.walletsRepository.find();
+        return this.walletsRepository.find({
+            where: {
+                isIdentified: true,
+            },
+        });
     }
-    findOne(id) {
-        return `This action returns a #${id} wallet`;
+    async findOne(title) {
+        const walletInstance = await this.walletsRepository.findOne({
+            where: {
+                title: title,
+                isIdentified: false,
+            },
+        });
+        if (walletInstance == undefined) {
+            return '00000000-0000-0000-0000-000000000000';
+        }
+        else {
+            return walletInstance.id;
+        }
     }
-    update(id, updateWalletDto) {
-        return `This action updates a #${id} wallet`;
+    async check(title) {
+        const walletCount = await this.walletsRepository.count({
+            where: {
+                title: title,
+                isIdentified: true,
+            },
+        });
+        return walletCount !== 0;
+    }
+    async update(updateWalletDto) {
+        return this.walletsRepository.update(updateWalletDto.id, updateWalletDto);
     }
     remove(id) {
         return `This action removes a #${id} wallet`;

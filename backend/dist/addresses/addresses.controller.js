@@ -21,11 +21,17 @@ let AddressesController = class AddressesController {
     constructor(addressesService) {
         this.addressesService = addressesService;
     }
-    findAll(uuid) {
-        return this.addressesService.findAll(uuid);
+    findAllAddressTransaction(uuid) {
+        return this.addressesService.findAllAddressTransaction(uuid);
     }
-    create(createAddressDto) {
-        return this.addressesService.create(createAddressDto);
+    findAllAddressWallet(uuid) {
+        return this.addressesService.findAllAddressWallet(uuid);
+    }
+    createAddressTransaction(createAddressDto) {
+        return this.addressesService.createAddressTransaction(createAddressDto);
+    }
+    createAddressWallet(createAddressDto) {
+        return this.addressesService.createAddressWallet(createAddressDto);
     }
     restore(uuid) {
         return this.addressesService.restore(uuid);
@@ -43,14 +49,28 @@ __decorate([
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
-], AddressesController.prototype, "findAll", null);
+], AddressesController.prototype, "findAllAddressTransaction", null);
 __decorate([
-    (0, common_1.Post)(),
+    (0, common_1.Get)('/wallet/:uuid'),
+    __param(0, (0, common_1.Param)('uuid', new common_1.ParseUUIDPipe())),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], AddressesController.prototype, "findAllAddressWallet", null);
+__decorate([
+    (0, common_1.Post)('/transaction'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [create_address_dto_1.CreateAddressDto]),
     __metadata("design:returntype", void 0)
-], AddressesController.prototype, "create", null);
+], AddressesController.prototype, "createAddressTransaction", null);
+__decorate([
+    (0, common_1.Post)('/wallet'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [create_address_dto_1.CreateAddressDto]),
+    __metadata("design:returntype", void 0)
+], AddressesController.prototype, "createAddressWallet", null);
 __decorate([
     (0, common_1.Patch)(':uuid'),
     __param(0, (0, common_1.Param)('uuid', new common_1.ParseUUIDPipe())),

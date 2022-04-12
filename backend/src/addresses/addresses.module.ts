@@ -5,9 +5,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Address } from './entities/address.entity';
 import { Identify } from 'src/identifies/entities/identify.entity';
 import { Transaction } from 'src/transactions/entities/transaction.entity';
+import { Wallet } from 'src/wallets/entities/wallet.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Address, Transaction])],
+  imports: [TypeOrmModule.forFeature([Address, Transaction, Wallet])],
   controllers: [AddressesController],
   providers: [AddressesService],
 })

@@ -1,4 +1,4 @@
-import { Repository } from 'typeorm';
+import { Repository, UpdateResult } from 'typeorm';
 import { CreateWalletDto } from './dto/create-wallet.dto';
 import { UpdateWalletDto } from './dto/update-wallet.dto';
 import { Wallet } from './entities/wallet.entity';
@@ -7,7 +7,8 @@ export declare class WalletsService {
     constructor(walletsRepository: Repository<Wallet>);
     create(createWalletDto: CreateWalletDto): Promise<CreateWalletDto>;
     findAll(): Promise<Wallet[]>;
-    findOne(id: number): string;
-    update(id: number, updateWalletDto: UpdateWalletDto): string;
+    findOne(title: string): Promise<string>;
+    check(title: string): Promise<boolean>;
+    update(updateWalletDto: UpdateWalletDto): Promise<UpdateResult>;
     remove(id: number): string;
 }

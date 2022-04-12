@@ -10,6 +10,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Wallet = void 0;
+const address_entity_1 = require("../../addresses/entities/address.entity");
 const book_entity_1 = require("../../books/entities/book.entity");
 const transaction_entity_1 = require("../../transactions/entities/transaction.entity");
 const typeorm_1 = require("typeorm");
@@ -24,9 +25,13 @@ __decorate([
     __metadata("design:type", String)
 ], Wallet.prototype, "title", void 0);
 __decorate([
-    (0, typeorm_1.Column)(),
+    (0, typeorm_1.Column)({ default: '' }),
     __metadata("design:type", String)
 ], Wallet.prototype, "address", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ default: false }),
+    __metadata("design:type", Boolean)
+], Wallet.prototype, "isIdentified", void 0);
 __decorate([
     (0, typeorm_1.CreateDateColumn)(),
     __metadata("design:type", Date)
@@ -47,6 +52,10 @@ __decorate([
     (0, typeorm_1.OneToMany)(() => transaction_entity_1.Transaction, (transaction) => transaction.wallet),
     __metadata("design:type", Array)
 ], Wallet.prototype, "transactions", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)(() => address_entity_1.Address, (address) => address.wallet),
+    __metadata("design:type", Array)
+], Wallet.prototype, "addresses", void 0);
 Wallet = __decorate([
     (0, typeorm_1.Entity)()
 ], Wallet);

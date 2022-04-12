@@ -1,5 +1,5 @@
-import { Identify } from 'src/identifies/entities/identify.entity';
 import { Transaction } from 'src/transactions/entities/transaction.entity';
+import { Wallet } from 'src/wallets/entities/wallet.entity';
 import {
   Entity,
   Column,
@@ -42,4 +42,7 @@ export class Address {
 
   @ManyToOne(() => Transaction, (transaction) => transaction.addresses)
   transaction: Transaction;
+
+  @ManyToOne(() => Wallet, (wallet) => wallet.addresses)
+  wallet: Wallet;
 }

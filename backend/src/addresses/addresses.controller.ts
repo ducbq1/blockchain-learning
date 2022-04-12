@@ -28,8 +28,13 @@ export class AddressesController {
   // }
 
   @Get(':uuid')
-  findAll(@Param('uuid', new ParseUUIDPipe()) uuid: string) {
-    return this.addressesService.findAll(uuid);
+  findAllAddressTransaction(@Param('uuid', new ParseUUIDPipe()) uuid: string) {
+    return this.addressesService.findAllAddressTransaction(uuid);
+  }
+
+  @Get('/wallet/:uuid')
+  findAllAddressWallet(@Param('uuid', new ParseUUIDPipe()) uuid: string) {
+    return this.addressesService.findAllAddressWallet(uuid);
   }
 
   // @Get('identify/:address')
@@ -37,9 +42,14 @@ export class AddressesController {
   //   return this.addressesService.findIdentify(address);
   // }
 
-  @Post()
-  create(@Body() createAddressDto: CreateAddressDto) {
-    return this.addressesService.create(createAddressDto);
+  @Post('/transaction')
+  createAddressTransaction(@Body() createAddressDto: CreateAddressDto) {
+    return this.addressesService.createAddressTransaction(createAddressDto);
+  }
+
+  @Post('/wallet')
+  createAddressWallet(@Body() createAddressDto: CreateAddressDto) {
+    return this.addressesService.createAddressWallet(createAddressDto);
   }
 
   @Patch(':uuid')

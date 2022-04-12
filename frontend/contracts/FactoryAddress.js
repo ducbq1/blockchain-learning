@@ -1,1 +1,0 @@
-export const factoryAddress = "0x6f998146476ddeb299f43c337fadd9c093673bd2";

@@ -6,7 +6,8 @@ export declare class WalletsController {
     constructor(walletsService: WalletsService);
     create(createWalletDto: CreateWalletDto): Promise<CreateWalletDto>;
     findAll(): Promise<import("./entities/wallet.entity").Wallet[]>;
-    findOne(id: string): string;
-    update(id: string, updateWalletDto: UpdateWalletDto): string;
+    findOne(title: string): Promise<string>;
+    check(title: string): Promise<boolean>;
+    update(updateWalletDto: UpdateWalletDto): Promise<import("typeorm").UpdateResult>;
     remove(id: string): string;
 }

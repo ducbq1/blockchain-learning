@@ -1,3 +1,4 @@
+import { Address } from 'src/addresses/entities/address.entity';
 import { Book } from 'src/books/entities/book.entity';
 import { Transaction } from 'src/transactions/entities/transaction.entity';
 import {
@@ -18,8 +19,11 @@ export class Wallet {
   @Column()
   title: string;
 
-  @Column()
+  @Column({ default: '' })
   address: string;
+
+  @Column({ default: false })
+  isIdentified: boolean;
 
   @CreateDateColumn()
   createdAt!: Date;
@@ -35,4 +39,7 @@ export class Wallet {
 
   @OneToMany(() => Transaction, (transaction) => transaction.wallet)
   transactions: Transaction[];
+
+  @OneToMany(() => Address, (address) => address.wallet)
+  addresses: Address[];
 }

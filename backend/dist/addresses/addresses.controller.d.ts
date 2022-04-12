@@ -4,8 +4,10 @@ import { UpdateAddressDto } from './dto/update-address.dto';
 export declare class AddressesController {
     private readonly addressesService;
     constructor(addressesService: AddressesService);
-    findAll(uuid: string): Promise<import("./entities/address.entity").Address[]>;
-    create(createAddressDto: CreateAddressDto): Promise<import("./entities/address.entity").Address>;
+    findAllAddressTransaction(uuid: string): Promise<import("./entities/address.entity").Address[]>;
+    findAllAddressWallet(uuid: string): Promise<import("./entities/address.entity").Address[]>;
+    createAddressTransaction(createAddressDto: CreateAddressDto): Promise<import("./entities/address.entity").Address>;
+    createAddressWallet(createAddressDto: CreateAddressDto): Promise<import("./entities/address.entity").Address>;
     restore(uuid: string): Promise<import("typeorm").UpdateResult>;
     remove(uuid: string): Promise<import("typeorm").DeleteResult>;
     update(updateAddressDto: UpdateAddressDto): Promise<import("typeorm").UpdateResult>;

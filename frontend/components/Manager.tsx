@@ -17,7 +17,6 @@ import GppGoodIcon from "@mui/icons-material/GppGood";
 import Web3 from "web3";
 import { abiFactory } from "../contracts/Factory";
 import { abiOwnerManager } from "../contracts/OwnerManager";
-import { factoryAddress } from "../contracts/FactoryAddress";
 import LinearProgress from "@mui/material/LinearProgress";
 import Stack from "@mui/material/Stack";
 import Slide from "@mui/material/Slide";
@@ -45,7 +44,6 @@ export default function Manager() {
   const REPLACE_OWNER = "Replace Owner";
   const SUBMIT_TRANSACTION = "Submit Transaction";
 
-  const myContract = initContract(factoryAddress);
   const { accountContext, addressContext, signatureContext } =
     React.useContext(StoreContext);
   const [signature, setSignature] = signatureContext;
@@ -61,114 +59,21 @@ export default function Manager() {
 
   const [oldOwner, setOldOwner] = React.useState("");
   const [newOwner, setNewOwner] = React.useState("");
-  const [transaction, setTransaction] = React.useState({});
+  const [transaction, setTransaction] = React.useState({
+    destination: "",
+    value: 0,
+    data: "",
+    parameter: "",
+  });
 
   const [accounts, setAccounts] = accountContext;
   const [loading, setLoading] = React.useState(false);
   const [loadingTable, setLoadingTable] = React.useState(false);
   const [progress, setProgress] = React.useState(10);
 
-  /*
-  const columns: GridColDef[] = [
-    { field: "id", headerName: "ID", width: 60 },
-    { field: "uuid", headerName: "UUID", width: 60, hide: true },
-    {
-      field: "message",
-      headerName: "Message",
-      width: 200,
-      sortable: false,
-      flex: 1,
-    },
-    { field: "network", headerName: "Infural Network", width: 150 },
-    {
-      field: "address",
-      headerName: "Address",
-      width: 370,
-      description: "This column has a value of address",
-    },
-    {
-      field: "scan",
-      headerName: "Scan",
-      width: 70,
-      sortable: false,
-      disableColumnMenu: true,
-      align: "center",
-      renderCell: (params) => {
-        return (
-          <PageviewIcon
-            color="primary"
-            onClick={() => {
-              window.open(
-                `https://ropsten.etherscan.io/address/${params.row.address}`
-              );
-            }}
-          />
-        );
-      },
-    },
-    {
-      field: "isVerify",
-      headerName: "Status",
-      width: 80,
-      sortable: false,
-      disableColumnMenu: true,
-      align: "center",
-      renderCell: (params) => {
-        if (params.row.isVerify) {
-          return <GppGoodIcon color="success" />;
-        } else {
-          return <GppMaybeIcon color="secondary" />;
-        }
-      },
-    },
-    {
-      field: "action",
-      headerName: "Action",
-      width: 100,
-      sortable: false,
-      align: "center",
-
-      renderCell: (params) => {
-        if (params.row.isVerify) {
-          return (
-            <Button
-              variant="text"
-              onClick={() =>
-                handleDeactiveAccount(params.row.address, params.row.uuid)
-              }
-            >
-              Deactive
-            </Button>
-          );
-        } else {
-          return (
-            <Button
-              variant="text"
-              onClick={() =>
-                handleActiveAccount(params.row.address, params.row.uuid)
-              }
-            >
-              Active
-            </Button>
-          );
-        }
-      },
-    },
-  ];
-
-
-  */
-
   const columnsOwners: GridColDef[] = [
     { field: "id", headerName: "ID", width: 60 },
     { field: "uuid", headerName: "UUID", width: 60, hide: true },
-    // {
-    //   field: "message",
-    //   headerName: "Message",
-    //   width: 200,
-    //   sortable: false,
-    //   flex: 1,
-    // },
     {
       field: "address",
       headerName: "Address",
@@ -203,21 +108,6 @@ export default function Manager() {
         );
       },
     },
-    // {
-    //   field: "isVerify",
-    //   headerName: "Status",
-    //   width: 80,
-    //   sortable: false,
-    //   disableColumnMenu: true,
-    //   align: "center",
-    //   renderCell: (params) => {
-    //     if (params.row.isVerify) {
-    //       return <GppGoodIcon color="success" />;
-    //     } else {
-    //       return <GppMaybeIcon color="secondary" />;
-    //     }
-    //   },
-    // },
     {
       field: "action",
       headerName: "Action",
@@ -245,35 +135,11 @@ export default function Manager() {
           );
         } else {
           return (
-            <Button variant="outlined" aria-label="outlined" disabled>
+            <Button variant="text" aria-label="outlined" disabled>
               Readonly
             </Button>
           );
         }
-
-        // if (params.row.isVerify) {
-        //   return (
-        //     <Button
-        //       variant="text"
-        //       onClick={() =>
-        //         handleDeactiveAccount(params.row.address, params.row.uuid)
-        //       }
-        //     >
-        //       Deactive
-        //     </Button>
-        //   );
-        // } else {
-        //   return (
-        //     <Button
-        //       variant="text"
-        //       onClick={() =>
-        //         handleActiveAccount(params.row.address, params.row.uuid)
-        //       }
-        //     >
-        //       Active
-        //     </Button>
-        //   );
-        // }
       },
     },
   ];
@@ -281,13 +147,6 @@ export default function Manager() {
   const columnsTransactions: GridColDef[] = [
     { field: "id", headerName: "ID", width: 60 },
     { field: "uuid", headerName: "UUID", width: 60, hide: true },
-    // {
-    //   field: "message",
-    //   headerName: "Message",
-    //   width: 200,
-    //   sortable: false,
-    //   flex: 1,
-    // },
     { field: "data", headerName: "Data", width: 60, hide: true },
 
     {
@@ -345,6 +204,13 @@ export default function Manager() {
       // align: "center",
       renderCell: (params) => {
         const [signed, total] = params.row.confirmations;
+        if (signed.data.length > total.length && !params.row.executed) {
+          return (
+            <Button variant="text" aria-label="outlined" disabled>
+              Out Date
+            </Button>
+          );
+        }
         if (
           total
             .map((item) => item.toLowerCase())
@@ -395,7 +261,7 @@ export default function Manager() {
           }
         } else {
           return (
-            <Button variant="outlined" aria-label="outlined" disabled>
+            <Button variant="text" aria-label="outlined" disabled>
               Readonly
             </Button>
           );
@@ -411,13 +277,24 @@ export default function Manager() {
       align: "center",
       renderCell: (params) => {
         const [signed, total] = params.row.confirmations;
+        if (signed.data.length > total.length && !params.row.executed) {
+          return (
+            <Button variant="text" aria-label="outlined" disabled>
+              No
+            </Button>
+          );
+        }
         if (
           total
             .map((item) => item.toLowerCase())
             .includes(accounts[0].toLowerCase())
         ) {
           if (params.row.executed) {
-            return "Yes";
+            return (
+              <Button variant="text" aria-label="text" disabled>
+                Yes
+              </Button>
+            );
           } else {
             return (
               <Button
@@ -446,7 +323,7 @@ export default function Manager() {
           }
         } else {
           return (
-            <Button variant="outlined" aria-label="outlined" disabled>
+            <Button variant="text" aria-label="outlined" disabled>
               Readonly
             </Button>
           );
@@ -455,7 +332,57 @@ export default function Manager() {
     },
   ];
 
-  const handleRemoveList = () => {};
+  const handleSendTransaction = () => {
+    setAction(SUBMIT_TRANSACTION);
+    setOpenModal(true);
+  };
+
+  const handleSendTransactionStorage = async () => {
+    let type = JSON.parse(transaction.data);
+    let parameter = transaction.parameter.split(",").map((item) => item.trim());
+    console.log(type, parameter);
+
+    const encodeData = web3.eth.abi.encodeFunctionCall(type, parameter);
+
+    const nonce = await web3.eth.getTransactionCount(dataSelected);
+
+    await axios.post(`http://${window.location.hostname}:4000/transactions`, {
+      id: uuidv4(),
+      destination: transaction.destination,
+      value: transaction.value,
+      data: encodeData,
+      description: action,
+      nonce: nonce,
+      address: dataSelected,
+    });
+
+    const owners = await initContract(dataSelected).methods.getOwners().call();
+
+    const txn = await axios.get(
+      `http://${window.location.hostname}:4000/transactions/${dataSelected}`
+    );
+
+    setRowsTransactions(
+      await Promise.all(
+        txn.data.map(async (item, index) => ({
+          id: index,
+          uuid: item.id,
+          destination: item.destination,
+          value: item.value,
+          data: item.data,
+          executed: item.mined,
+          description: item.description,
+          confirmations: [
+            await axios.get(
+              `http://${window.location.hostname}:4000/addresses/${item.id}`
+            ),
+            owners,
+          ],
+        }))
+      )
+    );
+    setOpenModal(false);
+  };
 
   const handleAddOwnerStorage = async () => {
     const encodeData = web3.eth.abi.encodeFunctionCall(
@@ -517,52 +444,6 @@ export default function Manager() {
   const handleAddOwner = () => {
     setAction(ADD_OWNER);
     setOpenModal(true);
-  };
-
-  const handleActiveAccount = async (address: string, uuid: string) => {
-    setLoading(true);
-    try {
-      const isDone = await myContract.methods
-        .recoverAddress(dataSelected.split("&")[1], address)
-        .send({ from: accounts[0] });
-      if (isDone) {
-        await axios.put(`http://${window.location.hostname}:4000/addresses`, {
-          id: uuid,
-          isVerify: true,
-        });
-        axios
-          .get(
-            `http://${window.location.hostname}:4000/identifies/addresses/${
-              dataSelected.split("&")[0]
-            }`
-          )
-          .then((response) => {
-            setRowsOwners(
-              response.data.map(
-                (item: {
-                  id: string;
-                  uuid: string;
-                  message: string;
-                  infuralNetworks: string;
-                  address: string;
-                  isVerify: boolean;
-                }) => ({
-                  id: response.data.indexOf(item) + 1,
-                  uuid: item.id,
-                  network: item.infuralNetworks,
-                  message: item.message.substring(0, 30).concat("..."),
-                  address: item.address,
-                  isVerify: item.isVerify,
-                })
-              )
-            );
-          });
-        setLoading(false);
-      }
-    } catch (err) {
-      setLoading(false);
-      window.console.error(err);
-    }
   };
 
   const handleRevokeTransaction = async (uuid) => {
@@ -709,12 +590,15 @@ export default function Manager() {
       params: [accounts[0], msgParam],
     });
 
-    await axios.post(`http://${window.location.hostname}:4000/addresses`, {
-      id: uuidv4(),
-      address: accounts[0],
-      signature: sign,
-      transactionId: uuid,
-    });
+    await axios.post(
+      `http://${window.location.hostname}:4000/addresses/transaction`,
+      {
+        id: uuidv4(),
+        address: accounts[0],
+        signature: sign,
+        transactionId: uuid,
+      }
+    );
 
     const owners = await initContract(dataSelected).methods.getOwners().call();
 
@@ -737,6 +621,14 @@ export default function Manager() {
         }))
       )
     );
+
+    const addresses = await axios.get(
+      `http://${window.location.hostname}:4000/addresses/${uuid}`
+    );
+
+    if (addresses.data.length == owners.length) {
+      handleExecuteTransaction(uuid, destination, value, data, addresses.data);
+    }
   };
 
   const handleReplaceOwnerStorage = async () => {
@@ -868,169 +760,6 @@ export default function Manager() {
     setOldOwner(address);
     setAction(REMOVE_OWNER);
     setOpenModal(true);
-    // const encodeData = web3.eth.abi.encodeFunctionCall(
-    //   {
-    //     inputs: [
-    //       {
-    //         internalType: "address",
-    //         name: "owner",
-    //         type: "address",
-    //       },
-    //     ],
-    //     name: "removeOwner",
-    //     outputs: [],
-    //     stateMutability: "nonpayable",
-    //     type: "function",
-    //   },
-    //   [address]
-    // );
-    // const nonce = await web3.eth.getTransactionCount(dataSelected);
-
-    // await axios.post(`http://${window.location.hostname}:4000/transactions`, {
-    //   id: uuidv4(),
-    //   destination: dataSelected,
-    //   value: 0,
-    //   data: encodeData,
-    //   description: "Remove Owners",
-    //   nonce: nonce,
-    //   address: dataSelected,
-    // });
-
-    // const owners = await initContract(dataSelected).methods.getOwners().call();
-
-    // const txn = await axios.get(
-    //   `http://${window.location.hostname}:4000/transactions/${dataSelected}`
-    // );
-
-    // setRowsTransactions(
-    //   await Promise.all(
-    //     txn.data.map(async (item, index) => ({
-    //       id: index,
-    //       uuid: item.id,
-    //       destination: item.destination,
-    //       value: item.value,
-    //       data: item.data,
-    //       executed: item.mined,
-    //       description: item.description,
-    //       confirmations: [
-    //         await axios.get(
-    //           `http://${window.location.hostname}:4000/addresses/${item.id}`
-    //         ),
-    //         owners,
-    //       ],
-    //     }))
-    //   )
-    // );
-  };
-
-  const handleDeactiveAccount = async (address: string, uuid: string) => {
-    setLoading(true);
-    try {
-      const isDone = await myContract.methods
-        .rejectAddress(dataSelected.split("&")[1], address)
-        .send({ from: accounts[0] });
-
-      if (isDone) {
-        await axios.put(`http://${window.location.hostname}:4000/addresses`, {
-          id: uuid,
-          isVerify: false,
-        });
-        axios
-          .get(
-            `http://${window.location.hostname}:4000/identifies/addresses/${
-              dataSelected.split("&")[0]
-            }`
-          )
-          .then((response) => {
-            setRowsOwners(
-              response.data.map(
-                (item: {
-                  id: string;
-                  uuid: string;
-                  message: string;
-                  infuralNetworks: string;
-                  address: string;
-                  isVerify: boolean;
-                }) => ({
-                  id: response.data.indexOf(item) + 1,
-                  uuid: item.id,
-                  network: item.infuralNetworks,
-                  message: item.message.substring(0, 30).concat("..."),
-                  address: item.address,
-                  isVerify: item.isVerify,
-                })
-              )
-            );
-          });
-        setLoading(false);
-      }
-    } catch (err) {
-      setLoading(false);
-      console.error(err);
-    }
-  };
-
-  const handleLog = () => {
-    const removeAccount = web3.eth.abi.encodeFunctionCall(
-      {
-        inputs: [
-          {
-            internalType: "address",
-            name: "owner",
-            type: "address",
-          },
-        ],
-        name: "removeOwner",
-        outputs: [],
-        stateMutability: "nonpayable",
-        type: "function",
-      },
-      ["0x3AA528B07d997b2E78e7BFB96fdFB7CA31cE0e46"]
-    );
-    console.log(removeAccount);
-    initContract(dataSelected)
-      .methods.implementTransaction(dataSelected, 0, removeAccount, signature)
-      .send({ from: accounts[0] })
-      .on("receipt", (receipt) => {
-        console.log(receipt);
-      });
-
-    console.log(signature);
-
-    // web3.eth.sendTransaction({
-    //   from: accounts[0],
-    //   to: dataSelected,
-    //   data: removeAccount,
-    // });
-  };
-
-  const handleRemove = async () => {
-    setLoading(true);
-    try {
-      const isDone = await myContract.methods
-        .remove(dataSelected.split("&")[1])
-        .send({ from: accounts[0] });
-
-      if (isDone) {
-        await axios.delete(
-          `http://${window.location.hostname}:4000/identifies/${
-            dataSelected.split("&")[0]
-          }`
-        );
-        axios
-          .get(
-            `http://${window.location.hostname}:4000/addresses/identify/${accounts[0]}`
-          )
-          .then((response) => {
-            setDataSelect(response.data);
-          });
-      }
-      setRowsOwners([]);
-      setLoading(false);
-    } catch (err) {
-      setLoading(false);
-      console.error(err);
-    }
   };
 
   React.useEffect(() => {
@@ -1042,47 +771,19 @@ export default function Manager() {
     axios
       .get(`http://${window.location.hostname}:4000/wallets`)
       .then((response) => {
-        setDataSelect(response.data);
+        setDataSelect(response.data.filter((item) => item.isIdentified));
       });
   }, [accounts]);
 
   const handleChangeWallet = async (
     event: SelectChangeEvent<typeof dataSelected>
   ) => {
-    // let catchValue = event.target.value;
-    // console.log(event.target.value);
     setLoadingTable(true);
     setDataSelected(event.target.value);
-
-    // initContract(event.target.value)
-    //   .methods.getOwners()
-    //   .call()
-    //   .then(async (result) => {
-    //     setRowsOwners(
-    //       await Promise.all(
-    //         result.map(async (item, index) => {
-    //           return {
-    //             id: index,
-    //             uuid: item,
-    //             balance: web3.utils.fromWei(
-    //               await web3.eth.getBalance(item),
-    //               "ether"
-    //             ),
-    //             message: item.substring(0, 30).concat("..."),
-    //             address: item,
-    //             transactionCount: await web3.eth.getTransactionCount(item),
-    //             isVerify: 0,
-    //           };
-    //         })
-    //       )
-    //     );
-    //   });
 
     const owners = await initContract(event.target.value)
       .methods.getOwners()
       .call();
-
-    console.log(owners);
 
     setRowsOwners(
       await Promise.all(
@@ -1094,10 +795,8 @@ export default function Manager() {
               await web3.eth.getBalance(item),
               "ether"
             ),
-            // message: item.substring(0, 30).concat("..."),
             address: item,
             transactionCount: await web3.eth.getTransactionCount(item),
-            // isVerify: 0,
           };
         })
       )
@@ -1128,30 +827,6 @@ export default function Manager() {
     );
 
     setLoadingTable(false);
-
-    // axios
-    //   .get(`http://${window.location.hostname}:4000/identifies/addresses/${id}`)
-    //   .then((response) => {
-    //     setRows(
-    //       response.data.map(
-    //         (item: {
-    //           id: string;
-    //           uuid: string;
-    //           message: string;
-    //           infuralNetworks: string;
-    //           address: string;
-    //           isVerify: boolean;
-    //         }) => ({
-    //           id: response.data.indexOf(item) + 1,
-    //           uuid: item.id,
-    //           network: item.infuralNetworks,
-    //           message: item.message.substring(0, 30).concat("..."),
-    //           address: item.address,
-    //           isVerify: item.isVerify,
-    //         })
-    //       )
-    //     );
-    //   });
   };
 
   const handleCloseFormControl = () => {
@@ -1206,7 +881,7 @@ export default function Manager() {
             style={{ transformOrigin: "0 0 0" }}
             {...(loading ? { timeout: 1000 } : {})}
           >
-            <Stack sx={{ width: "50%", color: "grey.500" }} spacing={2}>
+            <Stack sx={{ width: "40%", color: "grey.500" }} spacing={2}>
               <LinearProgress color="secondary" />
               <LinearProgress color="success" />
               <LinearProgress color="inherit" />
@@ -1226,7 +901,8 @@ export default function Manager() {
               aria-label="outlined primary button group"
             >
               <Button onClick={handleAddOwner}>Add Owner</Button>
-              <Button onClick={handleRemoveList}>Remove List</Button>
+              {/* <Button onClick={handleRemoveList}>Remove List</Button> */}
+              <Button onClick={handleSendTransaction}>New Transaction</Button>
               {/* <Button color="secondary" onClick={handleRemove}>
                 REMOVE
               </Button> */}
@@ -1249,7 +925,7 @@ export default function Manager() {
       </Grid>
 
       <Grid item xs={12}>
-        <Box sx={{ height: 250, width: "100%" }}>
+        <Box sx={{ height: 270, width: "100%" }}>
           <DataGrid
             rows={rowsOwners}
             columns={columnsOwners}
@@ -1335,9 +1011,10 @@ export default function Manager() {
                   sx={{ color: "action.active", mr: 1, mt: 1, fontSize: 60 }}
                 />
                 <TextField
-                  onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-                    setNewOwner(event.target.value)
-                  }
+                  onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                    setNewOwner(event.target.value);
+                    // console.log(event.target.value);
+                  }}
                   sx={{ width: "90%" }}
                   id="input-with-sx"
                   label="Address"
@@ -1381,6 +1058,94 @@ export default function Manager() {
               </>
             )}
 
+            {action == SUBMIT_TRANSACTION && (
+              <>
+                <Box sx={{ display: "flex", alignItems: "center", mt: 2 }}>
+                  <AccountCircle
+                    sx={{ color: "action.active", mr: 1, mt: 1, fontSize: 60 }}
+                  />
+                  <TextField
+                    sx={{ width: "90%" }}
+                    id="input-with-sx"
+                    label="Destination"
+                    variant="standard"
+                    // disabled
+                    // InputProps={{
+                    //   readOnly: true,
+                    // }}
+                    // value={oldOwner}
+                    onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                      transaction.destination = event.target.value;
+                      // setTransaction(
+                      //   Object.entries(transaction).map((item, index) => {
+                      //     item = event.target.value;
+                      //   })
+                      // );
+                      setTransaction(transaction);
+                    }}
+                  />
+                </Box>
+                <Box sx={{ display: "flex", alignItems: "center", mt: 2 }}>
+                  {/* <AccountCircle
+                    sx={{ color: "action.active", mr: 1, mt: 1, fontSize: 60 }}
+                  /> */}
+                  <TextField
+                    onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+                      // setNewOwner(event.target.value)
+                      {
+                        transaction.value = Number(event.target.value);
+                        setTransaction(transaction);
+                      }
+                    }
+                    type="number"
+                    sx={{ width: "100%" }}
+                    id="input-with-sx"
+                    label="Amount (ETH)"
+                    // variant="standard"
+                  />
+                </Box>
+                <Box sx={{ display: "flex", alignItems: "center", mt: 2 }}>
+                  {/* <AccountCircle
+                    sx={{ color: "action.active", mr: 1, mt: 1, fontSize: 60 }}
+                  /> */}
+                  <TextField
+                    onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+                      // setNewOwner(event.target.value)
+                      {
+                        transaction.data = event.target.value;
+                        setTransaction(transaction);
+                      }
+                    }
+                    sx={{ width: "100%" }}
+                    id="input-with-sx"
+                    multiline
+                    rows={4}
+                    label="ABI String"
+                    // variant="standard"
+                  />
+                </Box>
+                <Box sx={{ display: "flex", alignItems: "center", mt: 2 }}>
+                  {/* <AccountCircle
+                    sx={{ color: "action.active", mr: 1, mt: 1, fontSize: 60 }}
+                  /> */}
+                  <TextField
+                    onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+                      // setNewOwner(event.target.value)
+                      {
+                        transaction.parameter = event.target.value;
+                        setTransaction(transaction);
+                      }
+                    }
+                    // type="number"
+                    sx={{ width: "100%" }}
+                    id="input-with-sx"
+                    label="Parameter"
+                    // variant="standard"
+                  />
+                </Box>
+              </>
+            )}
+
             <Stack
               sx={{ mt: 4, mb: 2, width: "100%" }}
               direction="row"
@@ -1395,12 +1160,18 @@ export default function Manager() {
                     handleRemoveOwnerStorage();
                   } else if (action == ADD_OWNER) {
                     if (newOwner == "") {
-                      console.log("Hello");
+                      console.log("Empty");
                     } else {
                       handleAddOwnerStorage();
                     }
                   } else if (action == REPLACE_OWNER) {
-                    handleReplaceOwnerStorage();
+                    if (newOwner == "") {
+                      console.log("Empty");
+                    } else {
+                      handleReplaceOwnerStorage();
+                    }
+                  } else if (action == SUBMIT_TRANSACTION) {
+                    handleSendTransactionStorage();
                   }
                 }}
               >

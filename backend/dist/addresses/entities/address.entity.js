@@ -10,8 +10,8 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Address = void 0;
-const identify_entity_1 = require("../../identifies/entities/identify.entity");
 const transaction_entity_1 = require("../../transactions/entities/transaction.entity");
+const wallet_entity_1 = require("../../wallets/entities/wallet.entity");
 const typeorm_1 = require("typeorm");
 let Address = class Address {
 };
@@ -43,6 +43,10 @@ __decorate([
     (0, typeorm_1.ManyToOne)(() => transaction_entity_1.Transaction, (transaction) => transaction.addresses),
     __metadata("design:type", transaction_entity_1.Transaction)
 ], Address.prototype, "transaction", void 0);
+__decorate([
+    (0, typeorm_1.ManyToOne)(() => wallet_entity_1.Wallet, (wallet) => wallet.addresses),
+    __metadata("design:type", wallet_entity_1.Wallet)
+], Address.prototype, "wallet", void 0);
 Address = __decorate([
     (0, typeorm_1.Entity)()
 ], Address);

@@ -3,4 +3,5 @@ export declare class CreateAddressDto {
     address: string;
     signature: string;
     transactionId: string;
+    walletId: string;
 }

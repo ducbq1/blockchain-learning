@@ -23,7 +23,7 @@
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx"
-, "store.js", "pages/_app.jsx", "pages/index.jsx", "server.js"  ],
+, "store.js", "pages/_app.jsx", "pages/index.jsx", "server.js", "utils/crypto_mainet.js"  ],
   "exclude": [
     "node_modules"
   ]

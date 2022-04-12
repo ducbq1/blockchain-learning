@@ -16,15 +16,15 @@ import {
   Divider,
 } from "@mui/material";
 import { randomBytes } from "crypto";
-import GridWelcome from "../components/GridWelcome";
-import Manager from "../components/Manager";
+import GridCreate from "../../components/GridCreate";
+import Manager from "../../components/Manager";
 import MetaMaskOnboarding from "@metamask/onboarding";
 import Web3 from "web3";
 import Link from "next/link";
 import { LoadingButton } from "@mui/lab";
 import ExitToAppIcon from "@mui/icons-material/ExitToApp";
-import Statistic from "../components/Statistic";
-import AddressBook from "../components/AddressBook";
+import Statistic from "../../components/Statistic";
+import AddressBook from "../../components/AddressBook";
 // import Transactions from "../components/Transactions";
 import MenuIcon from "@mui/icons-material/Menu";
 import SentimentSatisfiedAltIcon from "@mui/icons-material/SentimentSatisfiedAlt";
@@ -34,18 +34,16 @@ import PageviewIcon from "@mui/icons-material/Pageview";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import IosShareIcon from "@mui/icons-material/IosShare";
 import Tooltip from "@mui/material/Tooltip";
-import { abiFactory } from "../contracts/Factory";
-import { StoreContext } from "../store";
+import { StoreContext } from "../../store";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import { useRouter } from "next/router";
-
 import {
   ONBOARD_TEXT,
   CONNECT_TEXT,
   CONNECTED_TEXT,
   NOT_CONNECT_TEXT,
   DISCONNECT,
-} from "../utils/constant";
+  FACTORY_ADDRESS,
+} from "../../utils/constant";
 
 // const ONBOARD_TEXT: string = "Install MetaMask!";
 // const CONNECT_TEXT: string = "Connect Wallet";
@@ -86,7 +84,7 @@ function TabPanel(props: TabPanelProps) {
   const { children, value, index, ...other } = props;
   return (
     <>
-      {value === 0 && <GridWelcome />}
+      {value === 0 && <GridCreate />}
       {value === 1 && <Manager />}
       {value === 2 && <AddressBook />}
       {value === 3 && <Statistic />}
@@ -103,11 +101,10 @@ function a11yProps(index: number) {
 
 // const messageVerify = "0x" + randomBytes(32).toString("hex");
 const web3 = new Web3(Web3.givenProvider || "ws://localhost:8545");
-const initContract = (addr: string) =>
-  new web3.eth.Contract(abiFactory as any[], addr);
+// const initContract = (addr: string) =>
+//   new web3.eth.Contract(abiFactory as any[], addr);
 
 export default function Index() {
-  const router = useRouter();
   const { accountContext, addressContext, signatureContext } =
     React.useContext(StoreContext);
   const [accounts, setAccounts]: [Array<string>, any] = accountContext;
@@ -343,8 +340,7 @@ export default function Index() {
               aria-label="menu"
               sx={{ mr: 2 }}
               onClick={() => {
-                // window.location.href = `http://${window.location.hostname}:3000`;
-                router.push(`/`);
+                window.location.href = `http://${window.location.hostname}:3000`;
               }}
             >
               <SentimentSatisfiedAltIcon />

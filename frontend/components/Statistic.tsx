@@ -3,7 +3,6 @@ import CssBaseline from "@mui/material/CssBaseline";
 import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
 // import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
-import { Pie } from "react-chartjs-2";
 import axios from "axios";
 import { DataGrid, GridColDef, GridValueGetterParams } from "@mui/x-data-grid";
 import InputLabel from "@mui/material/InputLabel";
@@ -20,13 +19,13 @@ import GppMaybeIcon from "@mui/icons-material/GppMaybe";
 import GppGoodIcon from "@mui/icons-material/GppGood";
 import Web3 from "web3";
 import { abiOwnerManager } from "../contracts/OwnerManager";
-import { factoryAddress } from "../contracts/FactoryAddress";
 import Stack from "@mui/material/Stack";
 import Slide from "@mui/material/Slide";
 import Grow from "@mui/material/Grow";
 import Typography from "@mui/material/Typography";
 import LinearProgress from "@mui/material/LinearProgress";
 import CircularProgress from "@mui/material/CircularProgress";
+import ChartDataLabels from "chartjs-plugin-datalabels";
 
 import {
   Chart as ChartJS,
@@ -36,48 +35,82 @@ import {
   Title,
   Tooltip,
   Legend,
+  ArcElement,
+  CoreChartOptions,
+  TitleOptions,
+  LineElement,
+  PointElement,
 } from "chart.js";
-import { Bar } from "react-chartjs-2";
+import { Bar, Doughnut, Pie, Line } from "react-chartjs-2";
 import faker from "@faker-js/faker";
+import { _DeepPartialObject } from "chart.js/types/utils";
+import { Paper, Skeleton } from "@mui/material";
 
 // ChartJS.register(ArcElement, Tooltip, Legend);
 
 ChartJS.register(
   CategoryScale,
+  ChartDataLabels,
   LinearScale,
   BarElement,
+  LineElement,
+  PointElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
+  ArcElement
 );
 
-export const options = {
+export const optionBar = {
   responsive: true,
   plugins: {
+    datalabels: {
+      display: false,
+      formatter: (value, context) => {
+        return Number(value).toFixed(2);
+      },
+      color: "#fff",
+    },
     legend: {
       position: "top" as const,
     },
     title: {
       display: true,
-      text: "List address with balance and sum of transactions",
+      text: "Balance and Transactions Count",
       position: "bottom" as const,
     },
   },
 };
 
-// const labels = ["January", "February", "March", "April", "May", "June", "July"];
-
-// export const data = {
-//   labels,
+// export const dataLine = {
+//   labels: ["January", "February", "March", "April", "May", "June", "July"],
 //   datasets: [
 //     {
 //       label: "Dataset 1",
-//       data: labels.map(() => faker.datatype.number({ min: 0, max: 1000 })),
+//       data: [
+//         "January",
+//         "February",
+//         "March",
+//         "April",
+//         "May",
+//         "June",
+//         "July",
+//       ].map(() => faker.datatype.number({ min: -1000, max: 1000 })),
+//       borderColor: "rgb(255, 99, 132)",
 //       backgroundColor: "rgba(255, 99, 132, 0.5)",
 //     },
 //     {
 //       label: "Dataset 2",
-//       data: labels.map(() => faker.datatype.number({ min: 0, max: 1000 })),
+//       data: [
+//         "January",
+//         "February",
+//         "March",
+//         "April",
+//         "May",
+//         "June",
+//         "July",
+//       ].map(() => faker.datatype.number({ min: -1000, max: 1000 })),
+//       borderColor: "rgb(53, 162, 235)",
 //       backgroundColor: "rgba(53, 162, 235, 0.5)",
 //     },
 //   ],
@@ -88,7 +121,20 @@ const initContract = (addr: string) =>
   new web3.eth.Contract(abiOwnerManager as any[], addr);
 
 export default function Statistic() {
-  const [data, setData] = React.useState({ labels: [], datasets: [] });
+  const [dataBar, setDataBar] = React.useState({ labels: [], datasets: [] });
+  const [dataPieBalance, setDataPieBalance] = React.useState({
+    labels: [],
+    datasets: [],
+  });
+  const [dataPieTransaction, setDataPieTransaction] = React.useState({
+    labels: [],
+    datasets: [],
+  });
+
+  const [dataLine, setDataLine] = React.useState({
+    labels: [],
+    datasets: [],
+  });
   const [age, setAge] = React.useState<string | number>("");
   const [dataSelect, setDataSelect] = React.useState([]);
   const [dataSelected, setDataSelected] = React.useState<string>("");
@@ -96,13 +142,152 @@ export default function Statistic() {
   const [eachBalance, setEachBalance] = React.useState([]);
   const [eachAddress, setEachAddress] = React.useState([]);
   const [eachTransaction, setEachTransaction] = React.useState([]);
-  const [balance, setBalance] = React.useState([0, 0]);
+  const [eachGasUsed, setEachGasUsed] = React.useState([[]]);
+  // const [balance, setBalance] = React.useState([0, 0]);
   const [open, setOpen] = React.useState(false);
   const { accountContext, addressContext, signatureContext } =
     React.useContext(StoreContext);
 
   const [accounts, setAccounts] = accountContext;
   const [loading, setLoading] = React.useState(false);
+  const color = [
+    "#003f5c",
+    "#2f4b7c",
+    "#665191",
+    "#a05195",
+    "#d45087",
+    "#f95d6a",
+    "#ff7c43",
+    "#ffa600",
+  ];
+
+  const colorSpringPastels = [
+    "#fd7f6f",
+    "#7eb0d5",
+    "#b2e061",
+    "#bd7ebe",
+    "#ffb55a",
+    "#ffee65",
+    "#beb9db",
+    "#fdcce5",
+    "#8bd3c7",
+  ];
+
+  const optionLine = {
+    responsive: true,
+    plugins: {
+      datalabels: {
+        display: false,
+      },
+      legend: {
+        position: "bottom" as const,
+      },
+      title: {
+        display: true,
+        text: `Total Gas Used Last 25 Transactions: ${eachGasUsed.reduce(
+          (a, b) => {
+            return (
+              a +
+              b.reduce((sum, item) => {
+                return sum + Number(item.gasUsed);
+              }, 0)
+            );
+          },
+          0
+        )} Wei`,
+        position: "bottom" as const,
+      },
+    },
+    scales: {
+      x: {
+        display: true,
+        title: {
+          display: true,
+          // text: "Last 25 transactions",
+        },
+      },
+      y: {
+        display: true,
+        title: {
+          display: true,
+          text: "Value (Wei)",
+        },
+      },
+    },
+  };
+
+  const optionPieTransaction = {
+    type: "pie",
+    responsive: true,
+    plugins: {
+      datalabels: {
+        formatter: (value, context) => {
+          const sum = context.chart.data.datasets[0].data.reduce(
+            (a: number, b: number) => Number(a) + Number(b),
+            0
+          );
+          return Math.round((value / sum) * 100) + "%";
+        },
+        color: "#fff",
+      },
+      tooltip: {
+        enabled: true,
+      },
+      legend: {
+        position: "top" as const,
+      },
+      title: {
+        display: true,
+        text: `Transaction Count: ${eachTransaction.reduce(
+          (a, b) => a + b,
+          0
+        )}`,
+        position: "bottom" as const,
+      },
+    },
+  };
+
+  const optionPieBalance = {
+    responsive: true,
+    plugins: {
+      datalabels: {
+        formatter: (value, context) => {
+          const sum = context.chart.data.datasets[0].data.reduce(
+            (a: number, b: number) => Number(a) + Number(b),
+            0
+          );
+          return Math.round((value / sum) * 100) + "%";
+        },
+        color: "#fff",
+      },
+      tooltip: {
+        enabled: true,
+      },
+      legend: {
+        position: "top" as const,
+      },
+      title: {
+        display: true,
+        text: `Balance ${eachBalance
+          .reduce((a, b) => a + Number(b), 0)
+          .toFixed(4)}`,
+        position: "bottom" as const,
+      },
+    },
+    // elements: {
+    //   arc: {
+    //     borderWidth: 0,
+    //   },
+    // },
+  };
+
+  function getRandomRgb() {
+    var num = Math.round(0xffffff * Math.random());
+    var r = num >> 16;
+    var g = (num >> 8) & 255;
+    var b = num & 255;
+    return "rgb(" + r + ", " + g + ", " + b + ")";
+  }
 
   React.useEffect(() => {
     if (accounts.length < 0) {
@@ -110,80 +295,131 @@ export default function Statistic() {
       return;
     }
 
-    // try {
-    //   axios
-    //     .get(
-    //       `http://${window.location.hostname}:4000/addresses/identify/${accounts[0]}`
-    //     )
-    //     .then((response) => {
-    //       setDataSelect(response.data);
-    //     });
-    // } catch (err) {
-    //   console.error(err);
-    // }
+    axios
+      .get(`http://${window.location.hostname}:4000/wallets`)
+      .then((response) => {
+        setDataSelect(response.data.filter((item) => item.isIdentified));
+      });
   }, [accounts]);
 
   React.useEffect(() => {
-    setData({
+    console.log(
+      eachGasUsed.map((item) => {
+        // return item.filter((d) => d.isError == "1");
+        return item;
+      })
+    );
+
+    setDataBar({
       labels: eachAddress,
       datasets: [
         {
           label: "Balance",
           data: eachBalance,
-          backgroundColor: "rgba(255, 99, 132, 0.5)",
+          // backgroundColor: "rgba(255, 99, 132, 0.5)",
+          backgroundColor: "#f95d6a",
         },
         {
           label: "Transaction Count",
           data: eachTransaction,
-          backgroundColor: "rgba(53, 162, 235, 0.5)",
+          // backgroundColor: "rgba(53, 162, 235, 0.5)",
+          backgroundColor: "#665191",
         },
       ],
     });
-  }, [balance, eachAddress, eachBalance, eachTransaction]);
 
-  const handleChange = (event: SelectChangeEvent<typeof dataSelected>) => {
+    setDataPieBalance({
+      labels: eachAddress,
+      datasets: [
+        {
+          label: "Balance",
+          data: eachBalance,
+          // backgroundColor: eachAddress.map((item) => getRandomRgb()),
+          backgroundColor: color.slice(0, eachAddress.length),
+          hoverOffset: 4,
+        },
+      ],
+    });
+
+    setDataPieTransaction({
+      labels: eachAddress,
+      datasets: [
+        {
+          label: "Transaction",
+          data: eachTransaction,
+          backgroundColor: color.slice(0, eachAddress.length),
+          hoverOffset: 4,
+        },
+      ],
+    });
+
+    setDataLine({
+      labels: Array.from(Array(25).keys()),
+      datasets: eachGasUsed.map((item, index) => ({
+        // label: `Address ${index + 1}`,
+        label: eachAddress[index],
+        data: item.map((d) => d.gasUsed),
+        borderColor: colorSpringPastels[index],
+        backgroundColor: colorSpringPastels[index],
+      })),
+
+      // [
+      //   {
+      //     label: "Data One",
+      //     data: [3, 43, 54, 46],
+      //     borderColor: "rgb(53, 162, 235)",
+      //     backgroundColor: "rgba(53, 162, 235, 0.5)",
+      //   },
+      //   {
+      //     label: "Data Two",
+      //     data: [3, 43, 54, 46],
+      //     borderColor: "rgb(53, 162, 235)",
+      //     backgroundColor: "rgba(53, 162, 235, 0.5)",
+      //   },
+      // ],
+    });
+  }, [eachAddress, eachBalance, eachTransaction, eachGasUsed]);
+
+  const handleChange = async (
+    event: SelectChangeEvent<typeof dataSelected>
+  ) => {
     setLoading(true);
-    let catchValue = event.target.value;
-    let id = catchValue.split("&")[0];
-    setDataSelected(catchValue);
+    setDataSelected(event.target.value);
 
-    async function fetchData() {
-      let sumBalance = 0;
-      let sumActiveBalance = 0;
-      let arrAddress = [];
-      let arrTransactionCount = [];
-      let arrBalance = [];
-      const groupAddress = await axios.get(
-        `http://${window.location.hostname}:4000/identifies/addresses/${id}`
-      );
+    // console.log(eachGasUsed);
 
-      for (let element of groupAddress.data) {
-        let balanceAddress = await web3.eth.getBalance(element.address);
-        sumBalance += Number(balanceAddress);
-        if (element.isVerify) {
-          sumActiveBalance += Number(balanceAddress);
-        }
-      }
-      setBalance([sumActiveBalance / 10 ** 18, sumBalance / 10 ** 18]);
+    const owners = await initContract(event.target.value)
+      .methods.getOwners()
+      .call();
 
-      for (let element of groupAddress.data) {
-        arrAddress.push(element.address);
-        let transactionRoot = await web3.eth.getTransactionCount(
-          element.address
-        );
-        // setEachTransaction([...eachTransaction, transactionRoot]);
-        arrTransactionCount.push(Number(transactionRoot));
-        let balanceRoot = await web3.eth.getBalance(element.address);
-        // setEachBalance([...eachBalance, balanceRoot]);
-        arrBalance.push(Number(balanceRoot) / 10 ** 18);
-      }
+    setEachAddress(owners);
 
-      setEachAddress(arrAddress);
-      setEachTransaction(arrTransactionCount);
-      setEachBalance(arrBalance);
-    }
+    setEachTransaction(
+      await Promise.all(
+        owners.map(async (item) => await web3.eth.getTransactionCount(item))
+      )
+    );
 
-    fetchData().then(() => setLoading(false));
+    setEachBalance(
+      await Promise.all(
+        owners.map(async (item) =>
+          web3.utils.fromWei(await web3.eth.getBalance(item))
+        )
+      )
+    );
+
+    setEachGasUsed(
+      await Promise.all(
+        owners.map(async (item) => {
+          const result = await axios.get(
+            `https://api-ropsten.etherscan.io/api?module=account&action=txlist&address=${item}&startblock=0&endblock=99999999&page=1&offset=200&sort=asc&apikey=H77KF8THJ7PJ9V5HWDQBFBMFYSP24FMPPU`
+          );
+          return result.data.result.slice(-25);
+        })
+      )
+    );
+
+    setLoading(false);
   };
 
   const handleClose = () => {
@@ -217,9 +453,9 @@ export default function Statistic() {
                 onChange={handleChange}
               >
                 {dataSelect.map((item, index) => {
-                  let mergeId = item.id + "&" + item.combineId;
+                  // let mergeId = item.id + "&" + item.combineId;
                   return (
-                    <MenuItem key={index} value={mergeId}>
+                    <MenuItem key={index} value={item.address}>
                       {item.title}
                     </MenuItem>
                   );
@@ -232,7 +468,8 @@ export default function Statistic() {
               </Box>
             )}
           </Stack>
-          <Stack direction="row" spacing={4}>
+
+          {/* <Stack direction="row" spacing={4}>
             <Typography variant="h5" component="h2">
               Total:{" "}
               {`${balance[0].toPrecision(5)} / ${balance[1].toPrecision(5)}`}{" "}
@@ -241,12 +478,31 @@ export default function Statistic() {
             <Typography variant="h5" component="h2">
               Credit Score: 500
             </Typography>
-          </Stack>
+          </Stack> */}
         </Stack>
       </Grid>
-      <Grid item xs={12}>
-        <Bar options={options} data={data} />
-      </Grid>
+      {dataSelected.length > 0 && (
+        <Grid item xs={6}>
+          <Pie options={optionPieTransaction} data={dataPieTransaction} />
+        </Grid>
+      )}
+      {dataSelected.length > 0 && (
+        <Grid item xs={6}>
+          <Pie options={optionPieBalance} data={dataPieBalance} />
+        </Grid>
+      )}
+
+      {/* {dataSelected.length > 0 && (
+        <Grid item xs={12}>
+          <Bar options={optionBar} data={dataBar} />
+        </Grid>
+      )} */}
+
+      {dataSelected.length > 0 && (
+        <Grid item xs={12}>
+          <Line options={optionLine} data={dataLine} />
+        </Grid>
+      )}
     </Grid>
   );
 }

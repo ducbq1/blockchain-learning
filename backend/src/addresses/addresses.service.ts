@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Identify } from 'src/identifies/entities/identify.entity';
 import { Transaction } from 'src/transactions/entities/transaction.entity';
+import { Wallet } from 'src/wallets/entities/wallet.entity';
 import { DeleteResult, InsertResult, Repository, UpdateResult } from 'typeorm';
 import { CreateAddressDto } from './dto/create-address.dto';
 import { UpdateAddressDto } from './dto/update-address.dto';
@@ -15,6 +16,8 @@ export class AddressesService {
     private readonly addressesRepository: Repository<Address>,
     @InjectRepository(Transaction)
     private readonly transactionsRepository: Repository<Transaction>,
+    @InjectRepository(Wallet)
+    private readonly walletsRepository: Repository<Wallet>,
   ) {}
   // async findAll(sort: boolean): Promise<Address[]> {
   //   if (sort) {
@@ -24,7 +27,7 @@ export class AddressesService {
   //   }
   // }
 
-  async findAll(uuid: string): Promise<Address[]> {
+  async findAllAddressTransaction(uuid: string): Promise<Address[]> {
     const transactionInstance = await this.transactionsRepository.findOne({
       where: {
         id: uuid,
@@ -32,6 +35,17 @@ export class AddressesService {
       relations: ['addresses'],
     });
     return transactionInstance.addresses;
+  }
+
+  async findAllAddressWallet(uuid: string): Promise<Address[]> {
+    const walletInstance = await this.walletsRepository.findOne({
+      where: {
+        id: uuid,
+        isIdentified: false,
+      },
+      relations: ['addresses'],
+    });
+    return walletInstance.addresses;
   }
 
   // async findIdentify(address: string): Promise<Identify[]> {
@@ -81,7 +95,9 @@ export class AddressesService {
   //   return this.addressesRepository.save(address);
   // }
 
-  async create(createAddressDto: CreateAddressDto): Promise<Address> {
+  async createAddressTransaction(
+    createAddressDto: CreateAddressDto,
+  ): Promise<Address> {
     const transactionInstance = await this.transactionsRepository.findOne({
       where: { id: createAddressDto.transactionId },
       relations: ['addresses'],
@@ -95,6 +111,27 @@ export class AddressesService {
     }
     const address = this.addressesRepository.create(createAddressDto);
     address.transaction = transactionInstance;
+
+    return this.addressesRepository.save(address);
+  }
+
+  async createAddressWallet(
+    createAddressDto: CreateAddressDto,
+  ): Promise<Address> {
+    const walletInstance = await this.walletsRepository.findOne({
+      where: { id: createAddressDto.walletId },
+      relations: ['addresses'],
+    });
+    // console.log(walletInstance);
+    if (
+      walletInstance.addresses.some(
+        (item) => item.address == createAddressDto.address,
+      )
+    ) {
+      return new Address();
+    }
+    const address = this.addressesRepository.create(createAddressDto);
+    address.wallet = walletInstance;
 
     return this.addressesRepository.save(address);
   }

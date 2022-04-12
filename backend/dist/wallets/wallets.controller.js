@@ -27,11 +27,14 @@ let WalletsController = class WalletsController {
     findAll() {
         return this.walletsService.findAll();
     }
-    findOne(id) {
-        return this.walletsService.findOne(+id);
+    findOne(title) {
+        return this.walletsService.findOne(title);
     }
-    update(id, updateWalletDto) {
-        return this.walletsService.update(+id, updateWalletDto);
+    check(title) {
+        return this.walletsService.check(title);
+    }
+    update(updateWalletDto) {
+        return this.walletsService.update(updateWalletDto);
     }
     remove(id) {
         return this.walletsService.remove(+id);
@@ -51,18 +54,24 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], WalletsController.prototype, "findAll", null);
 __decorate([
-    (0, common_1.Get)(':id'),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.Get)(':title'),
+    __param(0, (0, common_1.Param)('title')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], WalletsController.prototype, "findOne", null);
 __decorate([
-    (0, common_1.Patch)(':id'),
-    __param(0, (0, common_1.Param)('id')),
-    __param(1, (0, common_1.Body)()),
+    (0, common_1.Get)('check/:title'),
+    __param(0, (0, common_1.Param)('title')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, update_wallet_dto_1.UpdateWalletDto]),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], WalletsController.prototype, "check", null);
+__decorate([
+    (0, common_1.Patch)(),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [update_wallet_dto_1.UpdateWalletDto]),
     __metadata("design:returntype", void 0)
 ], WalletsController.prototype, "update", null);
 __decorate([

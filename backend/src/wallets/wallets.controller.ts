@@ -25,14 +25,19 @@ export class WalletsController {
     return this.walletsService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.walletsService.findOne(+id);
+  @Get(':title')
+  findOne(@Param('title') title: string) {
+    return this.walletsService.findOne(title);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateWalletDto: UpdateWalletDto) {
-    return this.walletsService.update(+id, updateWalletDto);
+  @Get('check/:title')
+  check(@Param('title') title: string) {
+    return this.walletsService.check(title);
+  }
+
+  @Patch()
+  update(@Body() updateWalletDto: UpdateWalletDto) {
+    return this.walletsService.update(updateWalletDto);
   }
 
   @Delete(':id')
