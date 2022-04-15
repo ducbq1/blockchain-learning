@@ -44,7 +44,14 @@ import {
 import { Bar, Doughnut, Pie, Line } from "react-chartjs-2";
 import faker from "@faker-js/faker";
 import { _DeepPartialObject } from "chart.js/types/utils";
-import { Paper, Skeleton } from "@mui/material";
+import {
+  Button,
+  Card,
+  CardActions,
+  CardContent,
+  Paper,
+  Skeleton,
+} from "@mui/material";
 
 // ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -143,10 +150,12 @@ export default function Statistic() {
   const [eachAddress, setEachAddress] = React.useState([]);
   const [eachTransaction, setEachTransaction] = React.useState([]);
   const [eachGasUsed, setEachGasUsed] = React.useState([[]]);
+  const [data, setData] = React.useState([[]]);
   // const [balance, setBalance] = React.useState([0, 0]);
   const [open, setOpen] = React.useState(false);
   const { accountContext, addressContext, signatureContext } =
     React.useContext(StoreContext);
+  const [creditScore, setCreditScore] = React.useState(105);
 
   const [accounts, setAccounts] = accountContext;
   const [loading, setLoading] = React.useState(false);
@@ -303,13 +312,6 @@ export default function Statistic() {
   }, [accounts]);
 
   React.useEffect(() => {
-    console.log(
-      eachGasUsed.map((item) => {
-        // return item.filter((d) => d.isError == "1");
-        return item;
-      })
-    );
-
     setDataBar({
       labels: eachAddress,
       datasets: [
@@ -378,7 +380,7 @@ export default function Statistic() {
       //   },
       // ],
     });
-  }, [eachAddress, eachBalance, eachTransaction, eachGasUsed]);
+  }, [eachAddress, eachBalance, eachTransaction, eachGasUsed, data]);
 
   const handleChange = async (
     event: SelectChangeEvent<typeof dataSelected>
@@ -419,7 +421,118 @@ export default function Statistic() {
       )
     );
 
+    // setData(
+    //   await Promise.all(
+    //     owners.map(async (item) => {
+    //       const result = await axios.get(
+    //         `https://api-ropsten.etherscan.io/api?module=account&action=txlist&address=${item}&startblock=0&endblock=99999999&page=1&offset=200&sort=asc&apikey=H77KF8THJ7PJ9V5HWDQBFBMFYSP24FMPPU`
+    //       );
+    //       return result.data.result;
+    //     })
+    //   )
+    // );
+
+    // handleCreditScore();
+
+    const pData = await Promise.all(
+      owners.map(async (item) => {
+        const result = await axios.get(
+          `https://api-ropsten.etherscan.io/api?module=account&action=txlist&address=${item}&startblock=0&endblock=99999999&page=1&offset=200&sort=asc&apikey=H77KF8THJ7PJ9V5HWDQBFBMFYSP24FMPPU`
+        );
+        return result.data.result;
+      })
+    );
+
+    console.log(pData);
+
+    let pBalance = await Promise.all(
+      owners.map(async (item) =>
+        web3.utils.fromWei(await web3.eth.getBalance(item))
+      )
+    );
+    let pAgeAddress = pData.map((item) => {
+      return Math.floor(
+        (Date.now() / 1000 - Number(item[0].timeStamp)) / 3600 / 24
+      );
+    });
+    let pNumTransaction = pData.map((item) => item.length);
+    let pValueTransaction = pData.map((item) => {
+      return (
+        item.reduce((a, b) => {
+          return a + Number(b.value);
+        }, 0) / 1000000000000000000
+      );
+    });
+
+    console.log(pBalance, pAgeAddress, pNumTransaction, pValueTransaction);
+    let maxCreditScore = 0;
+    for (let i = 0; i < pBalance.length; i++) {
+      let pCreditScore =
+        Math.floor(
+          0.25 * 0.4 * pBalance[i] +
+            0.35 *
+              (0.3 * pAgeAddress[i] +
+                0.3 * pNumTransaction[i] +
+                0.4 * pValueTransaction[i])
+        ) + 250;
+      console.log(pCreditScore);
+      maxCreditScore = Math.max(maxCreditScore, pCreditScore);
+    }
+    setCreditScore(maxCreditScore);
+
     setLoading(false);
+  };
+
+  const handleCreditScore = () => {
+    console.log(creditScore);
+    console.log(data);
+    if (data.length !== 0) {
+      let pBalance = eachBalance;
+      let pAgeAddress = data.map((item) => {
+        return Math.floor(
+          (Date.now() / 1000 - Number(item[0].timeStamp)) / 3600 / 24
+        );
+      });
+      let pNumTransaction = data.map((item) => item.length);
+      let pValueTransaction = data.map((item) => {
+        return (
+          item.reduce((a, b) => {
+            return a + Number(b.value);
+          }, 0) / 1000000000000000000
+        );
+      });
+      let maxCreditScore = 0;
+      for (let i = 0; i < pBalance.length; i++) {
+        let pCreditScore =
+          Math.floor(
+            0.25 * 0.4 * pBalance[i] +
+              0.35 *
+                (0.3 * pAgeAddress[i] +
+                  0.3 * pNumTransaction[i] +
+                  0.4 * pValueTransaction[i])
+          ) + 150;
+        console.log(pCreditScore);
+        maxCreditScore = Math.max(maxCreditScore, pCreditScore);
+      }
+      console.log(maxCreditScore);
+      setCreditScore(maxCreditScore);
+    }
+  };
+
+  const mappingCreditScore = (input) => {
+    if (input >= 300 && input <= 574) {
+      return "Poor";
+    } else if (input >= 575 && input <= 659) {
+      return "Below Average";
+    } else if (input >= 600 && input <= 712) {
+      return "Fair";
+    } else if (input >= 713 && input <= 740) {
+      return "Good";
+    } else if (input >= 741 && input <= 900) {
+      return "Excellent";
+    } else {
+      return "Very Poor";
+    }
   };
 
   const handleClose = () => {
@@ -430,14 +543,20 @@ export default function Statistic() {
     setOpen(true);
   };
   return (
-    <Grid container spacing={2} direction="row" alignItems="center">
+    <Grid
+      container
+      spacing={2}
+      direction="row"
+      alignItems="center"
+      justifyContent="center"
+    >
       <Grid item xs={12}>
         <Stack
           direction="row"
           justifyContent="space-between"
           alignItems="center"
         >
-          <Stack direction="row" alignItems="center" spacing={4}>
+          <Stack direction="row" alignItems="center" spacing={2}>
             <FormControl sx={{ my: 1, width: 300 }}>
               <InputLabel id="demo-controlled-open-select-label">
                 Identification
@@ -462,6 +581,15 @@ export default function Statistic() {
                 })}
               </Select>
             </FormControl>
+            {dataSelected.length > 0 && (
+              <Button
+                variant="outlined"
+                sx={{ mt: 2, mb: 3, height: 56 }}
+                onClick={handleCreditScore}
+              >
+                Credit Score
+              </Button>
+            )}
             {loading && (
               <Box sx={{ display: "flex" }}>
                 <CircularProgress />
@@ -480,6 +608,54 @@ export default function Statistic() {
             </Typography>
           </Stack> */}
         </Stack>
+      </Grid>
+
+      <Grid item xs={6}>
+        <Card sx={{ minWidth: 275, border: 0.5 }}>
+          <CardContent>
+            <Typography
+              sx={{ fontSize: 14 }}
+              color="text.secondary"
+              gutterBottom
+            >
+              {loading ? "Analyzing..." : "Word of the Day"}
+            </Typography>
+            <Typography variant="h5" component="div">
+              Score: {creditScore}
+            </Typography>
+            <Typography sx={{ mb: 1.5 }} color="text.secondary">
+              {mappingCreditScore(creditScore)}
+            </Typography>
+            <Typography variant="body2">
+              well meaning and kindly.
+              <br />
+              {'"a benevolent smile"'}
+            </Typography>
+          </CardContent>
+          <CardActions>
+            <Button
+              size="small"
+              onClick={() => {
+                window.open(
+                  "https://www.investopedia.com/terms/c/credit_score.asp",
+                  "_blank"
+                );
+              }}
+            >
+              Learn More
+            </Button>
+          </CardActions>
+        </Card>
+      </Grid>
+
+      <Grid item xs={6}>
+        <img
+          src="credit-score.png"
+          alt=""
+          loading="lazy"
+          // height="500"
+          width="100%"
+        />
       </Grid>
       {dataSelected.length > 0 && (
         <Grid item xs={6}>

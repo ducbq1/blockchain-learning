@@ -77,7 +77,6 @@ let AddressesService = class AddressesService {
             where: { id: createAddressDto.walletId },
             relations: ['addresses'],
         });
-        console.log(walletInstance);
         if (walletInstance.addresses.some((item) => item.address == createAddressDto.address)) {
             return new address_entity_1.Address();
         }
