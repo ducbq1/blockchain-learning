@@ -118,28 +118,21 @@ contract OwnerManager {
         threshold = _threshold;
     }
 
-    function addOwner(address owner, uint256 _threshold)
+    function addOwner(address owner)
         public
         onlyWallet
         ownerDoesNotExist(owner)
         notNull(owner)
-        validRequirement(owners.length + 1, _threshold)
+        validRequirement(owners.length + 1, threshold)
     {
         isOwner[owner] = true;
         owners.push(owner);
-        // threshold += 1;
-        // emit ThresholdChange(threshold);
+        threshold += 1;
+        emit ThresholdChange(threshold);
         emit OwnerAddition(owner);
-        if (threshold != _threshold) {
-            changeThreshold(_threshold);
-        }
     }
 
-    function removeOwner(address owner, uint256 _threshold)
-        public
-        onlyWallet
-        ownerExists(owner)
-    {
+    function removeOwner(address owner) public onlyWallet ownerExists(owner) {
         isOwner[owner] = false;
         for (uint256 i = 0; i < owners.length - 1; i++) {
             if (owners[i] == owner) {
@@ -148,13 +141,10 @@ contract OwnerManager {
             }
         }
         owners.pop();
-        // if (owners.length < threshold) {
-        //     changeThreshold(owners.length);
-        // }
-        emit OwnerRemoval(owner);
-        if (threshold != _threshold) {
-            changeThreshold(_threshold);
+        if (owners.length < threshold) {
+            changeThreshold(owners.length);
         }
+        emit OwnerRemoval(owner);
     }
 
     function replaceOwner(address owner, address newOwner)
@@ -201,8 +191,8 @@ contract OwnerManager {
     ) public returns (bool) {
         uint256 nonce = addTransaction(destination, value, data);
         bytes32 txHash = getTransactionHash(destination, value, data);
-        require(signatures.length >= threshold);
-        for (uint256 i = 0; i < threshold; i++) {
+        require(signatures.length == threshold);
+        for (uint256 i = 0; i < signatures.length; i++) {
             address ownerRecover = Cryptography.recover(txHash, signatures[i]);
             if (!isOwner[ownerRecover]) {
                 return false;

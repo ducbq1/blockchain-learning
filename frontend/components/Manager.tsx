@@ -30,9 +30,12 @@ import {
   InputAdornment,
   Modal,
   TextField,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import { AccountCircle } from "@mui/icons-material";
+import AllInclusiveIcon from "@mui/icons-material/AllInclusive";
+import TripOriginIcon from "@mui/icons-material/TripOrigin";
 
 const web3 = new Web3(Web3.givenProvider || "ws://localhost:8545");
 const initContract = (addr: string) =>
@@ -43,6 +46,7 @@ export default function Manager() {
   const ADD_OWNER = "Add Owner";
   const REPLACE_OWNER = "Replace Owner";
   const SUBMIT_TRANSACTION = "Submit Transaction";
+  const CHANGE_THRESHOLD = "Change Threshold";
 
   const { accountContext, addressContext, signatureContext } =
     React.useContext(StoreContext);
@@ -52,6 +56,8 @@ export default function Manager() {
   const [dataSelect, setDataSelect] = React.useState([]);
   const [dataSelected, setDataSelected] = React.useState<string>("");
   const [rowsOwners, setRowsOwners] = React.useState([]);
+  const [require, setRequire] = React.useState(1);
+  const [newRequirement, setNewRequirement] = React.useState("1");
   const [rowsTransactions, setRowsTransactions] = React.useState([]);
   const [openFormControl, setOpenFormControl] = React.useState(false);
   const [openModal, setOpenModal] = React.useState(false);
@@ -70,6 +76,7 @@ export default function Manager() {
   const [loading, setLoading] = React.useState(false);
   const [loadingTable, setLoadingTable] = React.useState(false);
   const [progress, setProgress] = React.useState(10);
+  const [tooltip, setTooltip] = React.useState("");
 
   const columnsOwners: GridColDef[] = [
     { field: "id", headerName: "ID", width: 60 },
@@ -178,17 +185,20 @@ export default function Manager() {
             </>
           );
         }
-        if (signed.data.length === total.length) {
+        // if (signed.data.length === total.length) {
+        if (signed.data.length === require) {
           return (
             <>
-              {signed.data.length} / {total.length}&nbsp;&nbsp;
+              {/* {signed.data.length} / {total.length}&nbsp;&nbsp; */}
+              {signed.data.length} / {require}&nbsp;&nbsp;
               <GppGoodIcon color="success" />
             </>
           );
         } else {
           return (
             <>
-              {signed.data.length} / {total.length}&nbsp;&nbsp;{" "}
+              {/* {signed.data.length} / {total.length}&nbsp;&nbsp;{" "} */}
+              {signed.data.length} / {require}&nbsp;&nbsp;{" "}
               <GppMaybeIcon color="secondary" />
             </>
           );
@@ -204,7 +214,8 @@ export default function Manager() {
       // align: "center",
       renderCell: (params) => {
         const [signed, total] = params.row.confirmations;
-        if (signed.data.length > total.length && !params.row.executed) {
+        // if (signed.data.length > total.length && !params.row.executed) {
+        if (signed.data.length > require && !params.row.executed) {
           return (
             <Button variant="text" aria-label="outlined" disabled>
               Out Date
@@ -277,7 +288,8 @@ export default function Manager() {
       align: "center",
       renderCell: (params) => {
         const [signed, total] = params.row.confirmations;
-        if (signed.data.length > total.length && !params.row.executed) {
+        // if (signed.data.length > total.length && !params.row.executed) {
+        if (signed.data.length > require && !params.row.executed) {
           return (
             <Button variant="text" aria-label="outlined" disabled>
               No
@@ -302,8 +314,12 @@ export default function Manager() {
                 aria-label="outlined"
                 // color="success"
                 disabled={
-                  signed.data.length !== total.length ||
-                  !signed.data
+                  // signed.data.length !== total.length ||
+                  // !signed.data
+                  //   .map((item) => item.address.toLowerCase())
+                  //   .includes(accounts[0].toLowerCase())
+                  signed.data.length != require ||
+                  !rowsOwners
                     .map((item) => item.address.toLowerCase())
                     .includes(accounts[0].toLowerCase())
                 }
@@ -384,6 +400,65 @@ export default function Manager() {
     setOpenModal(false);
   };
 
+  const handleChangeThresholdStorage = async () => {
+    console.log(newRequirement);
+    const encodeData = web3.eth.abi.encodeFunctionCall(
+      {
+        inputs: [
+          {
+            internalType: "uint256",
+            name: "_threshold",
+            type: "uint256",
+          },
+        ],
+        name: "changeThreshold",
+        outputs: [],
+        stateMutability: "nonpayable",
+        type: "function",
+      },
+      [newRequirement]
+    );
+
+    const nonce = await web3.eth.getTransactionCount(dataSelected);
+
+    await axios.post(`http://${window.location.hostname}:4000/transactions`, {
+      id: uuidv4(),
+      destination: dataSelected,
+      value: 0,
+      data: encodeData,
+      description: action,
+      nonce: nonce,
+      address: dataSelected,
+    });
+
+    const owners = await initContract(dataSelected).methods.getOwners().call();
+
+    const txn = await axios.get(
+      `http://${window.location.hostname}:4000/transactions/${dataSelected}`
+    );
+
+    setRowsTransactions(
+      await Promise.all(
+        txn.data.map(async (item, index) => ({
+          id: index,
+          uuid: item.id,
+          destination: item.destination,
+          value: item.value,
+          data: item.data,
+          executed: item.mined,
+          description: item.description,
+          confirmations: [
+            await axios.get(
+              `http://${window.location.hostname}:4000/addresses/${item.id}`
+            ),
+            owners,
+          ],
+        }))
+      )
+    );
+    setOpenModal(false);
+  };
+
   const handleAddOwnerStorage = async () => {
     const encodeData = web3.eth.abi.encodeFunctionCall(
       {
@@ -393,13 +468,18 @@ export default function Manager() {
             name: "owner",
             type: "address",
           },
+          {
+            internalType: "uint256",
+            name: "_threshold",
+            type: "uint256",
+          },
         ],
         name: "addOwner",
         outputs: [],
         stateMutability: "nonpayable",
         type: "function",
       },
-      [newOwner]
+      [newOwner, newRequirement]
     );
     const nonce = await web3.eth.getTransactionCount(dataSelected);
 
@@ -439,6 +519,15 @@ export default function Manager() {
       )
     );
     setOpenModal(false);
+  };
+
+  const handleChangeThreshold = () => {
+    setAction(CHANGE_THRESHOLD);
+    setOpenModal(true);
+  };
+
+  const handleChangeRequirement = (event: SelectChangeEvent) => {
+    setNewRequirement(event.target.value as string);
   };
 
   const handleAddOwner = () => {
@@ -493,6 +582,11 @@ export default function Manager() {
         const owners = await initContract(dataSelected)
           .methods.getOwners()
           .call();
+
+        const threshold = await initContract(dataSelected)
+          .methods.threshold()
+          .call();
+        setRequire(threshold);
 
         console.log(owners);
 
@@ -626,7 +720,8 @@ export default function Manager() {
       `http://${window.location.hostname}:4000/addresses/${uuid}`
     );
 
-    if (addresses.data.length == owners.length) {
+    // if (addresses.data.length == owners.length) {
+    if (addresses.data.length == require) {
       handleExecuteTransaction(uuid, destination, value, data, addresses.data);
     }
   };
@@ -708,13 +803,18 @@ export default function Manager() {
             name: "owner",
             type: "address",
           },
+          {
+            internalType: "uint256",
+            name: "_threshold",
+            type: "uint256",
+          },
         ],
         name: "removeOwner",
         outputs: [],
         stateMutability: "nonpayable",
         type: "function",
       },
-      [oldOwner]
+      [oldOwner, newRequirement]
     );
     const nonce = await web3.eth.getTransactionCount(dataSelected);
 
@@ -781,9 +881,19 @@ export default function Manager() {
     setLoadingTable(true);
     setDataSelected(event.target.value);
 
+    const threshold = await initContract(event.target.value)
+      .methods.threshold()
+      .call();
+
     const owners = await initContract(event.target.value)
       .methods.getOwners()
       .call();
+
+    setRequire(threshold);
+
+    setTooltip(
+      `Transaction requires the confirmation of ${threshold} out of ${owners.length} owners`
+    );
 
     setRowsOwners(
       await Promise.all(
@@ -876,12 +986,26 @@ export default function Manager() {
               })}
             </Select>
           </FormControl>
+          {dataSelected.length > 0 && (
+            <Tooltip title={tooltip}>
+              <TextField
+                sx={{ marginLeft: 0.5, width: 70 }}
+                disabled
+                id="outlined-disabled"
+                // label="Disabled"
+                value={`${require} / ${rowsOwners.length}`}
+                defaultValue={`${require} / ${rowsOwners.length}`}
+              />
+            </Tooltip>
+          )}
+
+          {/* <Typography variant="h5">Hello</Typography> */}
           <Grow
             in={loading}
             style={{ transformOrigin: "0 0 0" }}
             {...(loading ? { timeout: 1000 } : {})}
           >
-            <Stack sx={{ width: "40%", color: "grey.500" }} spacing={2}>
+            <Stack sx={{ width: "20%", color: "grey.500" }} spacing={2}>
               <LinearProgress color="secondary" />
               <LinearProgress color="success" />
               <LinearProgress color="inherit" />
@@ -901,6 +1025,9 @@ export default function Manager() {
               aria-label="outlined primary button group"
             >
               <Button onClick={handleAddOwner}>Add Owner</Button>
+              <Button onClick={handleChangeThreshold}>
+                Change Requirement
+              </Button>
               {/* <Button onClick={handleRemoveList}>Remove List</Button> */}
               <Button onClick={handleSendTransaction}>New Transaction</Button>
               {/* <Button color="secondary" onClick={handleRemove}>
@@ -980,32 +1107,60 @@ export default function Manager() {
             <Divider />
 
             {action == REMOVE_OWNER && (
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  mt: 2,
-                  // justifyContent: "space-evenly",
-                }}
-              >
-                <AccountCircle
-                  sx={{ color: "action.active", mr: 1, mt: 1, fontSize: 60 }}
-                />
-                {/* &nbsp;&nbsp; */}
-                <TextField
-                  sx={{ width: "90%" }}
-                  id="input-with-sx"
-                  label="Address"
-                  variant="standard"
-                  InputProps={{
-                    readOnly: true,
+              <>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    mt: 2,
+                    // justifyContent: "space-evenly",
                   }}
-                  value={oldOwner}
-                />
-              </Box>
+                >
+                  <AccountCircle
+                    sx={{ color: "action.active", mr: 1, mt: 1, fontSize: 60 }}
+                  />
+                  {/* &nbsp;&nbsp; */}
+                  <TextField
+                    sx={{ width: "90%" }}
+                    id="input-with-sx"
+                    label="Address"
+                    variant="standard"
+                    InputProps={{
+                      readOnly: true,
+                    }}
+                    value={oldOwner}
+                  />
+                </Box>
+                <Box sx={{ display: "flex", alignItems: "center", mt: 2 }}>
+                  <TripOriginIcon
+                    sx={{ color: "action.active", mr: 1, mt: 1, fontSize: 60 }}
+                  />
+                  <FormControl variant="standard" sx={{ width: 150 }}>
+                    <InputLabel id="demo-simple-select-label">
+                      Requirement
+                    </InputLabel>
+                    <Select
+                      labelId="demo-simple-select-label"
+                      id="demo-simple-select"
+                      value={newRequirement}
+                      label="Requirement"
+                      onChange={handleChangeRequirement}
+                    >
+                      {rowsOwners.slice(1).map((item, index) => {
+                        return (
+                          <MenuItem value={index + 1}>{index + 1}</MenuItem>
+                        );
+                      })}
+                      {/* <MenuItem value={10}>Ten</MenuItem>
+                 <MenuItem value={20}>Twenty</MenuItem>
+                 <MenuItem value={30}>Thirty</MenuItem> */}
+                    </Select>
+                  </FormControl>
+                </Box>
+              </>
             )}
 
-            {action == ADD_OWNER && (
+            {/* {action == ADD_OWNER && (
               <Box sx={{ display: "flex", alignItems: "center", mt: 2 }}>
                 <AccountCircle
                   sx={{ color: "action.active", mr: 1, mt: 1, fontSize: 60 }}
@@ -1020,6 +1175,86 @@ export default function Manager() {
                   label="Address"
                   variant="standard"
                 />
+              </Box>
+            )} */}
+
+            {action == ADD_OWNER && (
+              <>
+                <Box sx={{ display: "flex", alignItems: "center", mt: 2 }}>
+                  <AccountCircle
+                    sx={{ color: "action.active", mr: 1, mt: 1, fontSize: 60 }}
+                  />
+                  <TextField
+                    onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                      setNewOwner(event.target.value);
+                      // console.log(event.target.value);
+                    }}
+                    sx={{ width: "90%" }}
+                    id="input-with-sx"
+                    label="Address"
+                    variant="standard"
+                  />
+                </Box>
+                <Box sx={{ display: "flex", alignItems: "center", mt: 2 }}>
+                  <TripOriginIcon
+                    sx={{ color: "action.active", mr: 1, mt: 1, fontSize: 60 }}
+                  />
+                  <FormControl variant="standard" sx={{ width: 150 }}>
+                    <InputLabel id="demo-simple-select-label">
+                      Requirement
+                    </InputLabel>
+                    <Select
+                      labelId="demo-simple-select-label"
+                      id="demo-simple-select"
+                      value={newRequirement}
+                      label="Requirement"
+                      onChange={handleChangeRequirement}
+                    >
+                      {rowsOwners.concat("NONE").map((item, index) => {
+                        return (
+                          <MenuItem value={index + 1}>{index + 1}</MenuItem>
+                        );
+                      })}
+                      {/* <MenuItem value={10}>Ten</MenuItem>
+                    <MenuItem value={20}>Twenty</MenuItem>
+                    <MenuItem value={30}>Thirty</MenuItem> */}
+                    </Select>
+                  </FormControl>
+                </Box>
+              </>
+            )}
+
+            {action == CHANGE_THRESHOLD && (
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  mt: 2,
+                  // justifyContent: "space-around",
+                }}
+              >
+                <TripOriginIcon
+                  sx={{ color: "action.active", mr: 1, mt: 1, fontSize: 60 }}
+                />
+                <FormControl variant="standard" sx={{ width: 150 }}>
+                  <InputLabel id="demo-simple-select-label">
+                    Requirement
+                  </InputLabel>
+                  <Select
+                    labelId="demo-simple-select-label"
+                    id="demo-simple-select"
+                    value={newRequirement}
+                    label="Requirement"
+                    onChange={handleChangeRequirement}
+                  >
+                    {rowsOwners.map((item, index) => {
+                      return <MenuItem value={index + 1}>{index + 1}</MenuItem>;
+                    })}
+                    {/* <MenuItem value={10}>Ten</MenuItem>
+                    <MenuItem value={20}>Twenty</MenuItem>
+                    <MenuItem value={30}>Thirty</MenuItem> */}
+                  </Select>
+                </FormControl>
               </Box>
             )}
 
@@ -1172,6 +1407,8 @@ export default function Manager() {
                     }
                   } else if (action == SUBMIT_TRANSACTION) {
                     handleSendTransactionStorage();
+                  } else if (action == CHANGE_THRESHOLD) {
+                    handleChangeThresholdStorage();
                   }
                 }}
               >

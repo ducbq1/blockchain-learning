@@ -16,7 +16,7 @@ import {
   Divider,
 } from "@mui/material";
 import { randomBytes } from "crypto";
-import GridWelcome from "../components/GridWelcome";
+import GridIndex from "../components/GridIndex";
 import Manager from "../components/Manager";
 import MetaMaskOnboarding from "@metamask/onboarding";
 import Web3 from "web3";
@@ -46,6 +46,7 @@ import {
   NOT_CONNECT_TEXT,
   DISCONNECT,
 } from "../utils/constant";
+import { addStorage } from "../utils/localStorage";
 
 // const ONBOARD_TEXT: string = "Install MetaMask!";
 // const CONNECT_TEXT: string = "Connect Wallet";
@@ -86,7 +87,7 @@ function TabPanel(props: TabPanelProps) {
   const { children, value, index, ...other } = props;
   return (
     <>
-      {value === 0 && <GridWelcome />}
+      {value === 0 && <GridIndex />}
       {value === 1 && <Manager />}
       {value === 2 && <AddressBook />}
       {value === 3 && <Statistic />}
@@ -213,6 +214,13 @@ export default function Index() {
     // setMessage(messageVerify);
     if (MetaMaskOnboarding.isMetaMaskInstalled()) {
       if (accounts.length > 0) {
+        addStorage(
+          {
+            address: accounts[0],
+            type: "Externally Owned Accounts",
+          },
+          "addressBook"
+        );
         if (address.every((element) => element.account != accounts[0])) {
           setAddress([
             ...address,

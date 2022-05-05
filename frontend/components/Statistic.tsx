@@ -155,7 +155,8 @@ export default function Statistic() {
   const [open, setOpen] = React.useState(false);
   const { accountContext, addressContext, signatureContext } =
     React.useContext(StoreContext);
-  const [creditScore, setCreditScore] = React.useState(105);
+  // const [creditScore, setCreditScore] = React.useState(300);
+  const creditScore = React.useRef(300);
 
   const [accounts, setAccounts] = accountContext;
   const [loading, setLoading] = React.useState(false);
@@ -474,11 +475,12 @@ export default function Statistic() {
               (0.3 * pAgeAddress[i] +
                 0.3 * pNumTransaction[i] +
                 0.4 * pValueTransaction[i])
-        ) + 250;
+        ) + 300;
       console.log(pCreditScore);
       maxCreditScore = Math.max(maxCreditScore, pCreditScore);
     }
-    setCreditScore(maxCreditScore);
+    // setCreditScore(maxCreditScore);
+    creditScore.current = maxCreditScore;
 
     setLoading(false);
   };
@@ -515,7 +517,7 @@ export default function Statistic() {
         maxCreditScore = Math.max(maxCreditScore, pCreditScore);
       }
       console.log(maxCreditScore);
-      setCreditScore(maxCreditScore);
+      // setCreditScore(maxCreditScore);
     }
   };
 
@@ -581,7 +583,7 @@ export default function Statistic() {
                 })}
               </Select>
             </FormControl>
-            {dataSelected.length > 0 && (
+            {/* {dataSelected.length > 0 && (
               <Button
                 variant="outlined"
                 sx={{ mt: 2, mb: 3, height: 56 }}
@@ -589,7 +591,7 @@ export default function Statistic() {
               >
                 Credit Score
               </Button>
-            )}
+            )} */}
             {loading && (
               <Box sx={{ display: "flex" }}>
                 <CircularProgress />
@@ -618,18 +620,20 @@ export default function Statistic() {
               color="text.secondary"
               gutterBottom
             >
-              {loading ? "Analyzing..." : "Word of the Day"}
+              {loading ? "Analyzing..." : "Credit Score Estimator"}
             </Typography>
             <Typography variant="h5" component="div">
-              Score: {creditScore}
+              Score: {creditScore.current}
             </Typography>
             <Typography sx={{ mb: 1.5 }} color="text.secondary">
-              {mappingCreditScore(creditScore)}
+              {mappingCreditScore(creditScore.current)}
             </Typography>
             <Typography variant="body2">
-              well meaning and kindly.
-              <br />
-              {'"a benevolent smile"'}
+              Credit scores are based on your credit history and can play a
+              significant role in the type of loan and loan terms, such as
+              interest rate, a lender may offer you.
+              {/* <br />
+              {'"a benevolent smile"'} */}
             </Typography>
           </CardContent>
           <CardActions>

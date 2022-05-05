@@ -8,8 +8,13 @@ import {
   Box,
   Button,
   Divider,
+  FormControl,
   Grow,
   IconButton,
+  InputLabel,
+  MenuItem,
+  Select,
+  SelectChangeEvent,
   TextField,
   Typography,
 } from "@mui/material";
@@ -32,6 +37,7 @@ import keccak256 from "keccak256";
 import SyncIcon from "@mui/icons-material/Sync";
 
 import { MESSAGE_SIGN, FACTORY_ADDRESS } from "../utils/constant";
+import { addStorage } from "../utils/localStorage";
 
 // const mapping = {
 //   "0x01": "Mainnet",
@@ -75,6 +81,13 @@ export default function Import() {
   const [nameIdentify, setNameIdentify] = React.useState("");
   const [isExist, setIsExist] = React.useState(false);
   const [openAddressList, setOpenAddressList] = React.useState(false);
+
+  const [require, setRequire] = React.useState("");
+
+  const handleChange = (event: SelectChangeEvent) => {
+    setRequire(event.target.value as string);
+    console.log(event.target.value);
+  };
 
   const handleCheck = async () => {
     const result = await axios.get(
@@ -187,7 +200,7 @@ export default function Import() {
     const addressList = address.map((item) => item.account);
 
     myContract.methods
-      .create(nameIdentify, addressList, signature, address.length)
+      .create(nameIdentify, addressList, signature, require)
       .send({ from: accounts[0] })
       .on("error", (error, receipt) => {
         setOpenAlert(true);
@@ -207,6 +220,15 @@ export default function Import() {
             receipt.events.ContractInstantiation.returnValues.instantiation,
           isIdentified: true,
         });
+
+        addStorage(
+          {
+            address:
+              receipt.events.ContractInstantiation.returnValues.instantiation,
+            type: "Contract Accounts",
+          },
+          "addressBook"
+        );
         setOpenAlert(true);
         setIsVerified(true);
         setLoading(false);
@@ -378,6 +400,7 @@ export default function Import() {
           <Box sx={{ "& > :not(style)": { my: 1, mr: 2 } }}>
             <Divider />
             <LoadingButton
+              sx={{ height: 55 }}
               variant="contained"
               startIcon={<DoneAllIcon />}
               onClick={handleConfirm}
@@ -392,8 +415,32 @@ export default function Import() {
               Confirm {address.filter((item) => item.status == 1).length} /{" "}
               {address.length}
             </LoadingButton>
+            <FormControl sx={{ height: 55, width: 120 }}>
+              <InputLabel id="demo-simple-select-label">Requires</InputLabel>
+              <Select
+                labelId="demo-simple-select-label"
+                id="demo-simple-select"
+                value={require}
+                label="Requires"
+                onChange={handleChange}
+              >
+                {address
+                  .filter((item) => item.status == 1)
+                  .map((element, index) => {
+                    return (
+                      <MenuItem key={index + 1} value={index + 1}>
+                        {index + 1}
+                      </MenuItem>
+                    );
+                  })}
+                {/* <MenuItem value={10}>Ten</MenuItem>
+                <MenuItem value={20}>Twenty</MenuItem>
+                <MenuItem value={30}>Thirty</MenuItem> */}
+              </Select>
+            </FormControl>
             <Grow in={isConfirmed}>
               <LoadingButton
+                sx={{ height: 55 }}
                 onClick={handleTransaction}
                 startIcon={<PublishIcon />}
                 loading={loading}

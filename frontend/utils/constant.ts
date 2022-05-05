@@ -1,4 +1,5 @@
-export const FACTORY_ADDRESS = "0x6f998146476ddeb299f43c337fadd9c093673bd2";
+// export const FACTORY_ADDRESS = "0x6f998146476ddeb299f43c337fadd9c093673bd2";
+export const FACTORY_ADDRESS = "0x4Cf0984A348F6EC403BE4CA00Ce2864d639F9eEA";
 export const MESSAGE_SIGN = "Send a Message for Authorization";
 export const ONBOARD_TEXT = "Install MetaMask!";
 export const CONNECT_TEXT = "Connect Wallet";

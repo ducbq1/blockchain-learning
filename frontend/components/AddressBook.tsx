@@ -23,6 +23,7 @@ import Slide from "@mui/material/Slide";
 import Grow from "@mui/material/Grow";
 
 import { Box, ButtonGroup, Divider, Typography } from "@mui/material";
+import { getStorage } from "../utils/localStorage";
 
 const web3 = new Web3(Web3.givenProvider || "ws://localhost:8545");
 const initContract = (addr: string) =>
@@ -59,24 +60,45 @@ export default function DataTable() {
     },
     {
       field: "action",
-      headerName: "Action",
-      type: "number",
-      width: 110,
-      editable: true,
+      headerName: "Scan",
+      // type: "number",
+      align: "center",
+
+      width: 70,
+      // editable: true,
+      renderCell: (params) => {
+        return (
+          <PageviewIcon
+            color="primary"
+            onClick={() => {
+              window.open(
+                `https://ropsten.etherscan.io/address/${params.row.address}`
+              );
+            }}
+          />
+        );
+      },
     },
   ];
 
   React.useEffect(() => {
-    setRows(
-      JSON.parse(window.localStorage.getItem("addressBook")).map(
-        (item, index) => ({
+    if (getStorage("addressBook") !== null) {
+      setRows(
+        getStorage("addressBook").map((item, index) => ({
           id: index,
           address: item.address,
           type: item.type,
-        })
-      )
-    );
+          scan: item.address,
+        }))
+      );
+    }
   }, [accounts]);
+
+  const handleClearEntry = () => {
+    const addressStorage = window.localStorage;
+    addressStorage.removeItem("addressBook");
+    addressStorage.setItem("addressBook", "[]");
+  };
 
   const handleCreateEntry = () => {
     const addressStorage = window.localStorage;
@@ -100,16 +122,17 @@ export default function DataTable() {
     ];
     addressStorage.setItem("addressBook", JSON.stringify(addressBook));
 
-    console.log(addressStorage.getItem("addressBook"));
+    // console.log(getStorage("addressBook"));
   };
 
   return (
     <Grid container spacing={2} direction="row">
       <Grid item xs={12}>
         <ButtonGroup variant="outlined">
-          <Button>Export</Button>
+          <Button onClick={handleClearEntry}>Clear</Button>
+          {/* <Button>Export</Button>
           <Button>Import</Button>
-          <Button onClick={handleCreateEntry}>Create Entry</Button>
+          <Button onClick={handleCreateEntry}>Create Entry</Button> */}
         </ButtonGroup>
       </Grid>
 

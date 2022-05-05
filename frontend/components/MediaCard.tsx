@@ -12,7 +12,8 @@ export default function MediaCard(props: { name: string; action: string }) {
   const router = useRouter();
 
   return (
-    <Card sx={{ maxWidth: 345 }}>
+    // <Card sx={{ maxWidth: 345 }}>
+    <Card sx={{ maxWidth: 532, boxShadow: 0.5 }}>
       <CardMedia
         component="img"
         height="140"
@@ -31,7 +32,7 @@ export default function MediaCard(props: { name: string; action: string }) {
         </Typography>
       </CardContent>
       <CardActions>
-        {props.name == CREATE && (
+        {/* {props.name == CREATE && (
           <Button
             size="small"
             onClick={() => {
@@ -41,7 +42,7 @@ export default function MediaCard(props: { name: string; action: string }) {
           >
             Create New
           </Button>
-        )}
+        )} */}
         {props.name == LOAD_EXIST && (
           <Button
             size="small"
