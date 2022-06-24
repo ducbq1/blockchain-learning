@@ -28,6 +28,7 @@ import AddressBook from "../components/AddressBook";
 // import Transactions from "../components/Transactions";
 import MenuIcon from "@mui/icons-material/Menu";
 import SentimentSatisfiedAltIcon from "@mui/icons-material/SentimentSatisfiedAlt";
+import CardTravelIcon from "@mui/icons-material/CardTravel";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
 import PageviewIcon from "@mui/icons-material/Pageview";
@@ -88,9 +89,9 @@ function TabPanel(props: TabPanelProps) {
   return (
     <>
       {value === 0 && <GridIndex />}
-      {value === 1 && <Manager />}
-      {value === 2 && <AddressBook />}
-      {value === 3 && <Statistic />}
+      {value === 1 && <Statistic />}
+      {value === 2 && <Manager />}
+      {value === 3 && <AddressBook />}
     </>
   );
 }
@@ -316,6 +317,7 @@ export default function Index() {
       window.ethereum.removeAllListeners("chainChanged");
       setLoading(false);
     }, 500);
+
     /*
     window.ethereum.request({
       method: "eth_requestAccounts",
@@ -355,7 +357,7 @@ export default function Index() {
                 router.push(`/`);
               }}
             >
-              <SentimentSatisfiedAltIcon />
+              <CardTravelIcon />
             </IconButton>
             <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
               Balance: {balance.toPrecision(5)} ETH
@@ -406,9 +408,9 @@ export default function Index() {
             textColor="secondary"
           >
             <Tab label="identification" {...a11yProps(0)} />
-            <Tab label="asset manager" {...a11yProps(1)} />
-            <Tab label="address book" {...a11yProps(2)} />
-            <Tab label="statistic" {...a11yProps(3)} />
+            <Tab label="statistic" {...a11yProps(1)} />
+            <Tab label="asset manager" {...a11yProps(2)} />
+            <Tab label="address book" {...a11yProps(3)} />
           </Tabs>
         </Box>
         <TabPanel value={value} index={0} />

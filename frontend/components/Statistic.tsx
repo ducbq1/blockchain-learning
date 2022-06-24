@@ -357,7 +357,7 @@ export default function Statistic() {
     });
 
     setDataLine({
-      labels: Array.from(Array(25).keys()),
+      labels: Array.from(Array(25).keys()).map((x) => x + 1),
       datasets: eachGasUsed.map((item, index) => ({
         // label: `Address ${index + 1}`,
         label: eachAddress[index],

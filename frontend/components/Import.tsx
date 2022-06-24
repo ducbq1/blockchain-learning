@@ -147,6 +147,8 @@ export default function Import() {
       }
     });
 
+    setRequire(signature.length);
+
     let addressPost = address
       .filter((item) => item.status == 1)
       .map((item) => item.account);
@@ -263,7 +265,7 @@ export default function Import() {
       >
         <TextField
           id="outlined-read-only-input"
-          label="Input name for creating"
+          label="Name"
           error={isExist}
           // helperText="Incorrect entry."
           // value={nameIdentify}
@@ -288,7 +290,7 @@ export default function Import() {
           loadingIndicator="Loading..."
           variant="outlined"
         >
-          Fetch data
+          Create
         </LoadingButton>
       </Stack>
 

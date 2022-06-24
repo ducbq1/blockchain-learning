@@ -1,5 +1,6 @@
 export function addStorage(obj, name) {
   const addressStorage = window.localStorage;
+  if (!getStorage(name)) return;
   if (
     getStorage(name).length == 0 ||
     getStorage(name).every(

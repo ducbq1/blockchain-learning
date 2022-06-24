@@ -122,6 +122,12 @@ export default function Manager() {
       sortable: false,
       // align: "center",
       renderCell: (params) => {
+        if (!accounts[0]) {
+          setDataSelected("");
+          setRowsOwners([]);
+          setRowsTransactions([]);
+          return;
+        }
         if (
           rowsOwners
             .map((item) => item.address.toLowerCase())
@@ -213,6 +219,7 @@ export default function Manager() {
       sortable: false,
       // align: "center",
       renderCell: (params) => {
+        if (!accounts[0]) return;
         const [signed, total] = params.row.confirmations;
         // if (signed.data.length > total.length && !params.row.executed) {
         if (signed.data.length > require && !params.row.executed) {
@@ -287,6 +294,7 @@ export default function Manager() {
       disableColumnMenu: true,
       align: "center",
       renderCell: (params) => {
+        if (!accounts[0]) return;
         const [signed, total] = params.row.confirmations;
         // if (signed.data.length > total.length && !params.row.executed) {
         if (signed.data.length > require && !params.row.executed) {
