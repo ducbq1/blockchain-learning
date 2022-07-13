@@ -8,6 +8,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.User = void 0;
 const typeorm_1 = require("typeorm");
@@ -45,7 +46,7 @@ __decorate([
 __decorate([
     (0, typeorm_1.OneToOne)(() => identify_entity_1.Identify),
     (0, typeorm_1.JoinColumn)(),
-    __metadata("design:type", identify_entity_1.Identify)
+    __metadata("design:type", typeof (_a = typeof identify_entity_1.Identify !== "undefined" && identify_entity_1.Identify) === "function" ? _a : Object)
 ], User.prototype, "identify", void 0);
 User = __decorate([
     (0, typeorm_1.Entity)()

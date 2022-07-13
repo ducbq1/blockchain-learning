@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Identify } from 'src/identifies/entities/identify.entity';
 import { Transaction } from 'src/transactions/entities/transaction.entity';
 import { Wallet } from 'src/wallets/entities/wallet.entity';
 import { DeleteResult, InsertResult, Repository, UpdateResult } from 'typeorm';
@@ -10,7 +9,7 @@ import { Address } from './entities/address.entity';
 import { Addresses } from './interfaces/addresses.interface';
 
 @Injectable()
-export class AddressesService {
+export class AddressesService implements Addresses {
   constructor(
     @InjectRepository(Address)
     private readonly addressesRepository: Repository<Address>,
@@ -19,6 +18,12 @@ export class AddressesService {
     @InjectRepository(Wallet)
     private readonly walletsRepository: Repository<Wallet>,
   ) {}
+  findAll(sort: boolean): Promise<Address[]> {
+    throw new Error('Method not implemented.');
+  }
+  create(createAddressDto: CreateAddressDto): Promise<Address> {
+    throw new Error('Method not implemented.');
+  }
   // async findAll(sort: boolean): Promise<Address[]> {
   //   if (sort) {
   //     return this.addressesRepository.find({ order: { message: 'ASC' } });

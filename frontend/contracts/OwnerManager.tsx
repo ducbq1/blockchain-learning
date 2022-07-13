@@ -1,4 +1,4 @@
-export const abiOwnerManager = [
+export const OwnerManager = [
   {
     inputs: [
       {

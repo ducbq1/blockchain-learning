@@ -5,7 +5,7 @@ export declare class UsersController {
     constructor(usersService: UsersService);
     findAll(): Promise<void>;
     findOne(uuid: string): Promise<import("./entities/user.entity").User>;
-    findIdentify(uuid: string): Promise<import("../identifies/entities/identify.entity").Identify>;
+    findIdentify(uuid: string): Promise<any>;
     create(createUserDto: CreateUserDto): Promise<import("./entities/user.entity").User>;
     remove(uuid: string): Promise<import("typeorm").UpdateResult>;
 }

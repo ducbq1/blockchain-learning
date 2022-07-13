@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "es5",
+    "target": "es2017",
     "lib": [
       "dom",
       "dom.iterable",
@@ -23,7 +23,7 @@
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx"
-, "store.js", "pages/_app.jsx", "pages/index.jsx", "server.js", "utils/crypto_mainet.js"  ],
+, "store.js", "pages/_app.jsx", "pages/index.jsx", "server.js", "utils/crypto_mainet.ts", "utils/AAVELendingPoolInteraction.mjs", "utils/chain_info.ts"  ],
   "exclude": [
     "node_modules"
   ]

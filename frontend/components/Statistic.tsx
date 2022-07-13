@@ -1,4 +1,5 @@
 import * as React from "react";
+import "chartjs-adapter-moment";
 import CssBaseline from "@mui/material/CssBaseline";
 import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
@@ -18,7 +19,7 @@ import PageviewIcon from "@mui/icons-material/Pageview";
 import GppMaybeIcon from "@mui/icons-material/GppMaybe";
 import GppGoodIcon from "@mui/icons-material/GppGood";
 import Web3 from "web3";
-import { abiOwnerManager } from "../contracts/OwnerManager";
+import { OwnerManager } from "../contracts/OwnerManager";
 import Stack from "@mui/material/Stack";
 import Slide from "@mui/material/Slide";
 import Grow from "@mui/material/Grow";
@@ -26,6 +27,7 @@ import Typography from "@mui/material/Typography";
 import LinearProgress from "@mui/material/LinearProgress";
 import CircularProgress from "@mui/material/CircularProgress";
 import ChartDataLabels from "chartjs-plugin-datalabels";
+import { LendingPoolAddressesProvider } from "../contracts/LendingPoolAddressProvider";
 
 import {
   Chart as ChartJS,
@@ -35,6 +37,7 @@ import {
   Title,
   Tooltip,
   Legend,
+  TimeScale,
   ArcElement,
   CoreChartOptions,
   TitleOptions,
@@ -50,14 +53,19 @@ import {
   CardActions,
   CardContent,
   Paper,
+  CardMedia,
   Skeleton,
 } from "@mui/material";
+import { LP_ADDRESS_PROVIDER } from "../utils/constant";
+import { LendingPool } from "../contracts/LendingPool";
+import { IPriceOracleGetter } from "../contracts/IPriceOracleGetter";
 
 // ChartJS.register(ArcElement, Tooltip, Legend);
 
 ChartJS.register(
   CategoryScale,
   ChartDataLabels,
+  TimeScale,
   LinearScale,
   BarElement,
   LineElement,
@@ -83,8 +91,23 @@ export const optionBar = {
     },
     title: {
       display: true,
-      text: "Balance and Transactions Count",
+      text: "Information of Address in Lending Pool",
       position: "bottom" as const,
+    },
+  },
+  scales: {
+    y: {
+      type: "linear" as const,
+      display: true,
+      position: "left" as const,
+    },
+    y1: {
+      type: "linear" as const,
+      display: true,
+      position: "right" as const,
+      grid: {
+        drawOnChartArea: false,
+      },
     },
   },
 };
@@ -124,8 +147,9 @@ export const optionBar = {
 // };
 
 const web3 = new Web3(Web3.givenProvider || "ws://localhost:8545");
-const initContract = (addr: string) =>
-  new web3.eth.Contract(abiOwnerManager as any[], addr);
+
+const initOwnerManagerContract = (addr: string) =>
+  new web3.eth.Contract(OwnerManager as any[], addr);
 
 export default function Statistic() {
   const [dataBar, setDataBar] = React.useState({ labels: [], datasets: [] });
@@ -147,6 +171,8 @@ export default function Statistic() {
   const [dataSelected, setDataSelected] = React.useState<string>("");
   const [rows, setRows] = React.useState([]);
   const [eachBalance, setEachBalance] = React.useState([]);
+  const [eachLoanToValue, setEachLoanToValue] = React.useState([]);
+  const [eachTotalFees, setEachTotalFees] = React.useState([]);
   const [eachAddress, setEachAddress] = React.useState([]);
   const [eachTransaction, setEachTransaction] = React.useState([]);
   const [eachGasUsed, setEachGasUsed] = React.useState([[]]);
@@ -313,20 +339,48 @@ export default function Statistic() {
   }, [accounts]);
 
   React.useEffect(() => {
+    const lendingPoolContract = async () => {
+      const lendingPoolAddressProviderContract = new web3.eth.Contract(
+        LendingPoolAddressesProvider as any[],
+        LP_ADDRESS_PROVIDER
+      );
+
+      const LP_ADDRESS = await lendingPoolAddressProviderContract.methods
+        .getLendingPool()
+        .call()
+        .catch((e) => {
+          throw Error(`Error getting lendingPool address: ${e.message}`);
+        });
+
+      const lendingPoolContract = new web3.eth.Contract(
+        LendingPool as any[],
+        LP_ADDRESS
+      );
+
+      return lendingPoolContract;
+    };
+
+    // lendingPoolContract().then(console.log);
+
+    // lendingPoolContract.methods.getReserves().call().then(console.log);
     setDataBar({
-      labels: eachAddress,
+      labels: eachAddress.map((element) =>
+        element.substring(0, 10).concat("...")
+      ),
       datasets: [
         {
-          label: "Balance",
-          data: eachBalance,
+          label: "Loan to Value (%)",
+          data: eachLoanToValue,
           // backgroundColor: "rgba(255, 99, 132, 0.5)",
           backgroundColor: "#f95d6a",
+          yAxisID: "y",
         },
         {
-          label: "Transaction Count",
-          data: eachTransaction,
+          label: "Total Fees (ETH)",
+          data: eachTotalFees,
           // backgroundColor: "rgba(53, 162, 235, 0.5)",
           backgroundColor: "#665191",
+          yAxisID: "y1",
         },
       ],
     });
@@ -381,7 +435,15 @@ export default function Statistic() {
       //   },
       // ],
     });
-  }, [eachAddress, eachBalance, eachTransaction, eachGasUsed, data]);
+  }, [
+    eachLoanToValue,
+    eachTotalFees,
+    eachAddress,
+    eachBalance,
+    eachTransaction,
+    eachGasUsed,
+    data,
+  ]);
 
   const handleChange = async (
     event: SelectChangeEvent<typeof dataSelected>
@@ -389,13 +451,65 @@ export default function Statistic() {
     setLoading(true);
     setDataSelected(event.target.value);
 
+    const lendingPoolAddressProviderContract = new web3.eth.Contract(
+      LendingPoolAddressesProvider as any[],
+      LP_ADDRESS_PROVIDER
+    );
+
+    const LP_ADDRESS = await lendingPoolAddressProviderContract.methods
+      .getLendingPool()
+      .call()
+      .catch((e) => {
+        throw Error(`Error getting lendingPool address: ${e.message}`);
+      });
+
+    const PRICE_ORALCE_ADDRESS =
+      await lendingPoolAddressProviderContract.methods
+        .getPriceOracle()
+        .call()
+        .catch((e) => {
+          throw Error(`Error getting priceOracle address: ${e.message}`);
+        });
+
+    const lendingPoolContract = new web3.eth.Contract(
+      LendingPool as any[],
+      LP_ADDRESS
+    );
+
+    const priceOracleContract = new web3.eth.Contract(
+      IPriceOracleGetter as any[],
+      PRICE_ORALCE_ADDRESS
+    );
+
     // console.log(eachGasUsed);
 
-    const owners = await initContract(event.target.value)
+    const owners = await initOwnerManagerContract(event.target.value)
       .methods.getOwners()
       .call();
 
     setEachAddress(owners);
+
+    setEachLoanToValue(
+      await Promise.all(
+        owners.map(async (owner) => {
+          const userAccountData = await lendingPoolContract.methods
+            .getUserAccountData(owner)
+            .call();
+          return userAccountData.ltv;
+        })
+      )
+    );
+
+    setEachTotalFees(
+      await Promise.all(
+        owners.map(async (owner) => {
+          const userAccountData = await lendingPoolContract.methods
+            .getUserAccountData(owner)
+            .call();
+          return userAccountData.totalFeesETH / 1e18;
+        })
+      )
+    );
 
     setEachTransaction(
       await Promise.all(
@@ -415,7 +529,7 @@ export default function Statistic() {
       await Promise.all(
         owners.map(async (item) => {
           const result = await axios.get(
-            `https://api-ropsten.etherscan.io/api?module=account&action=txlist&address=${item}&startblock=0&endblock=99999999&page=1&offset=200&sort=asc&apikey=H77KF8THJ7PJ9V5HWDQBFBMFYSP24FMPPU`
+            `https://api-kovan.etherscan.io/api?module=account&action=txlist&address=${item}&startblock=0&endblock=99999999&page=1&offset=200&sort=asc&apikey=H77KF8THJ7PJ9V5HWDQBFBMFYSP24FMPPU`
           );
           return result.data.result.slice(-25);
         })
@@ -426,7 +540,7 @@ export default function Statistic() {
     //   await Promise.all(
     //     owners.map(async (item) => {
     //       const result = await axios.get(
-    //         `https://api-ropsten.etherscan.io/api?module=account&action=txlist&address=${item}&startblock=0&endblock=99999999&page=1&offset=200&sort=asc&apikey=H77KF8THJ7PJ9V5HWDQBFBMFYSP24FMPPU`
+    //         `https://api-kovan.etherscan.io/api?module=account&action=txlist&address=${item}&startblock=0&endblock=99999999&page=1&offset=200&sort=asc&apikey=H77KF8THJ7PJ9V5HWDQBFBMFYSP24FMPPU`
     //       );
     //       return result.data.result;
     //     })
@@ -435,90 +549,339 @@ export default function Statistic() {
 
     // handleCreditScore();
 
-    const pData = await Promise.all(
-      owners.map(async (item) => {
-        const result = await axios.get(
-          `https://api-ropsten.etherscan.io/api?module=account&action=txlist&address=${item}&startblock=0&endblock=99999999&page=1&offset=200&sort=asc&apikey=H77KF8THJ7PJ9V5HWDQBFBMFYSP24FMPPU`
-        );
-        return result.data.result;
-      })
-    );
+    // const pData = await Promise.all(
+    //   owners.map(async (item) => {
+    //     const result = await axios.get(
+    //       `https://api-kovan.etherscan.io/api?module=account&action=txlist&address=${item}&startblock=0&endblock=99999999&page=1&offset=200&sort=asc&apikey=H77KF8THJ7PJ9V5HWDQBFBMFYSP24FMPPU`
+    //     );
+    //     return result.data.result;
+    //   })
+    // );
 
-    console.log(pData);
+    // console.log(pData);
 
-    let pBalance = await Promise.all(
-      owners.map(async (item) =>
-        web3.utils.fromWei(await web3.eth.getBalance(item))
-      )
-    );
-    let pAgeAddress = pData.map((item) => {
-      return Math.floor(
-        (Date.now() / 1000 - Number(item[0].timeStamp)) / 3600 / 24
-      );
-    });
-    let pNumTransaction = pData.map((item) => item.length);
-    let pValueTransaction = pData.map((item) => {
-      return (
-        item.reduce((a, b) => {
-          return a + Number(b.value);
-        }, 0) / 1000000000000000000
-      );
-    });
+    // let pBalance = await Promise.all(
+    //   owners.map(async (item) =>
+    //     web3.utils.fromWei(await web3.eth.getBalance(item))
+    //   )
+    // );
+    // let pAgeAddress = pData.map((item) => {
+    //   return Math.floor(
+    //     (Date.now() / 1000 - Number(item[0].timeStamp)) / 3600 / 24
+    //   );
+    // });
+    // let pNumTransaction = pData.map((item) => item.length);
+    // let pValueTransaction = pData.map((item) => {
+    //   console.log(item);
+    //   return (
+    //     item.reduce((a, b) => {
+    //       return a + Number(b.value);
+    //     }, 0) / 1000000000000000000
+    //   );
+    // });
 
-    console.log(pBalance, pAgeAddress, pNumTransaction, pValueTransaction);
-    let maxCreditScore = 0;
-    for (let i = 0; i < pBalance.length; i++) {
-      let pCreditScore =
-        Math.floor(
-          0.25 * 0.4 * pBalance[i] +
-            0.35 *
-              (0.3 * pAgeAddress[i] +
-                0.3 * pNumTransaction[i] +
-                0.4 * pValueTransaction[i])
-        ) + 300;
-      console.log(pCreditScore);
-      maxCreditScore = Math.max(maxCreditScore, pCreditScore);
-    }
-    // setCreditScore(maxCreditScore);
-    creditScore.current = maxCreditScore;
+    // console.log(pBalance, pAgeAddress, pNumTransaction, pValueTransaction);
+    // let maxCreditScore = 0;
+    // for (let i = 0; i < pBalance.length; i++) {
+    //   let pCreditScore =
+    //     Math.floor(
+    //       0.25 * pBalance[i] +
+    //         0.35 * (0.3 * pNumTransaction[i] + 0.4 * pValueTransaction[i]) +
+    //         0.15 * pAgeAddress[i]
+    //     ) * 10;
+    //   console.log(pCreditScore);
+    //   maxCreditScore = Math.max(maxCreditScore, pCreditScore);
+    // }
+    // // setCreditScore(maxCreditScore);
+    creditScore.current = 300;
 
     setLoading(false);
   };
 
-  const handleCreditScore = () => {
-    console.log(creditScore);
-    console.log(data);
-    if (data.length !== 0) {
-      let pBalance = eachBalance;
-      let pAgeAddress = data.map((item) => {
-        return Math.floor(
-          (Date.now() / 1000 - Number(item[0].timeStamp)) / 3600 / 24
-        );
+  const handleCreditScore = async () => {
+    setLoading(true);
+
+    const lendingPoolAddressProviderContract = new web3.eth.Contract(
+      LendingPoolAddressesProvider as any[],
+      LP_ADDRESS_PROVIDER
+    );
+
+    const LP_ADDRESS = await lendingPoolAddressProviderContract.methods
+      .getLendingPool()
+      .call()
+      .catch((e) => {
+        throw Error(`Error getting lendingPool address: ${e.message}`);
       });
-      let pNumTransaction = data.map((item) => item.length);
-      let pValueTransaction = data.map((item) => {
-        return (
-          item.reduce((a, b) => {
-            return a + Number(b.value);
-          }, 0) / 1000000000000000000
-        );
+
+    const PRICE_ORALCE_ADDRESS =
+      await lendingPoolAddressProviderContract.methods
+        .getPriceOracle()
+        .call()
+        .catch((e) => {
+          throw Error(`Error getting priceOracle address: ${e.message}`);
+        });
+
+    const lendingPoolContract = new web3.eth.Contract(
+      LendingPool as any[],
+      LP_ADDRESS
+    );
+
+    const priceOracleContract = new web3.eth.Contract(
+      IPriceOracleGetter as any[],
+      PRICE_ORALCE_ADDRESS
+    );
+
+    // console.log(creditScore.current);
+
+    const owners = await initOwnerManagerContract(dataSelected)
+      .methods.getOwners()
+      .call();
+
+    const reserves = await lendingPoolContract.methods.getReserves().call();
+    // console.log(reserves);
+    let maxCreditScore = 0;
+    let numTxn = [];
+    let valueTxn = [];
+    let ageOfAddress = [];
+    let balance = [];
+    let totalLiquidity = [];
+    let totalCollateral = [];
+    let totalBorrow = [];
+    let totalFee = [];
+    let availableBorrow = [];
+    let currentLiquidationThreshold = [];
+    let loanToValue = [];
+    let healthFactor = [];
+    let borrowRate = [];
+    let borrowRateMode = [];
+    let currentATokenBalance = [];
+    let currentBorrowBalance = [];
+    let lastUpdateTimestamp = [];
+    let liquidityRate = [];
+    let originationFee = [];
+    let principalBorrowBalance = [];
+    for (let [index, owner] of owners.entries()) {
+      // console.log(owner, index);
+      const userAccountData = await lendingPoolContract.methods
+        .getUserAccountData(owner)
+        .call();
+
+      console.log(userAccountData);
+
+      balance[index] = web3.utils.fromWei(await web3.eth.getBalance(owner));
+      totalLiquidity[index] = userAccountData.totalLiquidityETH;
+      totalCollateral[index] = web3.utils.fromWei(
+        userAccountData.totalCollateralETH
+      );
+      totalBorrow[index] = web3.utils.fromWei(userAccountData.totalBorrowsETH);
+      totalFee[index] = userAccountData.totalFeesETH;
+      availableBorrow[index] = userAccountData.availableBorrowETH;
+      currentLiquidationThreshold[index] =
+        userAccountData.currentLiquidationThreshold;
+      loanToValue[index] = userAccountData.ltv;
+      healthFactor[index] = userAccountData.healthFactor;
+      // console.log(userAccountData);
+
+      // console.log(reserves);
+
+      let Deposit = await lendingPoolContract.getPastEvents("Deposit", {
+        filter: {
+          _user: owner,
+        },
+        fromBlock: "earliest",
+        toBlock: "latest",
       });
-      let maxCreditScore = 0;
-      for (let i = 0; i < pBalance.length; i++) {
-        let pCreditScore =
-          Math.floor(
-            0.25 * 0.4 * pBalance[i] +
-              0.35 *
-                (0.3 * pAgeAddress[i] +
-                  0.3 * pNumTransaction[i] +
-                  0.4 * pValueTransaction[i])
-          ) + 150;
-        console.log(pCreditScore);
-        maxCreditScore = Math.max(maxCreditScore, pCreditScore);
-      }
-      console.log(maxCreditScore);
-      // setCreditScore(maxCreditScore);
+
+      let listTimestamp: number[] = Deposit.map((element) =>
+        Number(element.returnValues["_timestamp"])
+      );
+      ageOfAddress[index] = Math.floor(
+        (Date.now() / 1e3 - Math.min(...listTimestamp)) / 3600 / 24
+      ); // convert date now from milisecond to second
+
+      let RedeemUnderlying = await lendingPoolContract.getPastEvents(
+        "RedeemUnderlying",
+        {
+          filter: {
+            _user: owner,
+          },
+          fromBlock: "earliest",
+          toBlock: "latest",
+        }
+      );
+      let Borrow = await lendingPoolContract.getPastEvents("Borrow", {
+        filter: {
+          _user: owner,
+        },
+        fromBlock: "earliest",
+        toBlock: "latest",
+      });
+
+      let Repay = await lendingPoolContract.getPastEvents("Repay", {
+        filter: {
+          _user: owner,
+        },
+        fromBlock: "earliest",
+        toBlock: "latest",
+      });
+
+      // let FlashLoan = await lendingPoolContract.getPastEvents("FlashLoan", {
+      //   filter: {
+      //     _user: owner,
+      //   },
+      //   fromBlock: "earliest",
+      //   toBlock: "latest",
+      // });
+
+      let LiquidationCall = await lendingPoolContract.getPastEvents(
+        "LiquidationCall",
+        {
+          filter: {
+            _user: owner,
+          },
+          fromBlock: "earliest",
+          toBlock: "latest",
+        }
+      );
+
+      let valueDeposit =
+        Deposit.map((n) => Number(n.returnValues["_amount"])).reduce(
+          (previousValue: number, currentValue) => previousValue + currentValue,
+          0 as number
+        ) / 1e21;
+      let valueRedeemUnderlying =
+        RedeemUnderlying.map((n) => Number(n.returnValues["_amount"])).reduce(
+          (previousValue: number, currentValue) => previousValue + currentValue,
+          0 as number
+        ) / 1e21;
+      let valueBorrow =
+        Borrow.map((n) => Number(n.returnValues["_amount"])).reduce(
+          (previousValue: number, currentValue) => previousValue + currentValue,
+          0
+        ) / 1e21;
+      let valueRepay =
+        Repay.map((n) => Number(n.returnValues["_amountMinusFees"])).reduce(
+          (previousValue: number, currentValue) => previousValue + currentValue,
+          0
+        ) /
+          1e21 +
+        Repay.map((n) => Number(n.returnValues["_fees"])).reduce(
+          (previousValue: number, currentValue) => previousValue + currentValue,
+          0
+        ) /
+          1e21;
+
+      numTxn[index] =
+        Deposit.length +
+        RedeemUnderlying.length +
+        Borrow.length +
+        Repay.length +
+        LiquidationCall.length;
+      valueTxn[index] =
+        valueDeposit + valueRedeemUnderlying + valueBorrow + valueRepay;
+
+      /**********************************
+      currentATokenBalance[index] = await reserves.reduce(
+        async (a: number, b) => {
+          const priceOracleReserve = await priceOracleContract.methods
+            .getAssetPrice(b)
+            .call();
+          const { currentATokenBalance } = await lendingPoolContract.methods
+            .getUserReserveData(b, owner)
+            .call();
+          return (await a) + priceOracleReserve * currentATokenBalance;
+        },
+        Promise.resolve(0)
+      );
+      ****************************************/
     }
+
+    for (let [index, owner] of owners.entries()) {
+      let totalAsset =
+        0.4 * balance[index] +
+        0.6 * (totalCollateral[index] - totalBorrow[index]);
+      let tempCreditScore = 0;
+      if (balance[index] == 0 || totalCollateral[index] == 0) {
+        tempCreditScore = 3;
+      } else {
+        if (totalBorrow[index] / balance[index] > 1) {
+          tempCreditScore =
+            0.25 * totalAsset +
+            0.35 *
+              (0.3 * ageOfAddress[index] +
+                0.4 * numTxn[index] +
+                0.3 * valueTxn[index]) +
+            0.15 *
+              (0.6 * 1 +
+                0.4 *
+                  (totalBorrow[index] /
+                    (totalCollateral[index] - totalBorrow[index]))) +
+            0.25 * ((totalCollateral[index] - totalBorrow[index]) / totalAsset);
+        } else {
+          tempCreditScore =
+            0.25 * totalAsset +
+            0.35 *
+              (0.3 * ageOfAddress[index] +
+                0.4 * numTxn[index] +
+                0.3 * valueTxn[index]) +
+            0.15 *
+              (0.6 * (totalBorrow[index] / balance[index]) +
+                0.4 *
+                  (totalBorrow[index] /
+                    (totalCollateral[index] - totalBorrow[index]))) +
+            0.25 * ((totalCollateral[index] - totalBorrow[index]) / totalAsset);
+        }
+      }
+
+      console.log(tempCreditScore);
+      maxCreditScore = Math.max(maxCreditScore, tempCreditScore);
+    }
+    creditScore.current = Math.floor(maxCreditScore * 100);
+
+    console.log(balance);
+    console.log(totalCollateral);
+    console.log(totalBorrow);
+    console.log(numTxn);
+
+    // console.log(balance);
+    // console.log(currentATokenBalance);
+    // console.log(totalBorrow);
+    // console.log(totalCollateral);
+    // console.log(healthFactor);
+
+    // console.log(data);
+    // if (data.length !== 0) {
+    //   let pBalance = eachBalance;
+    //   let pAgeAddress = data.map((item) => {
+    //     return Math.floor(
+    //       (Date.now() / 1000 - Number(item[0].timeStamp)) / 3600 / 24
+    //     );
+    //   });
+    //   let pNumTransaction = data.map((item) => item.length);
+    //   let pValueTransaction = data.map((item) => {
+    //     return (
+    //       item.reduce((a, b) => {
+    //         return a + Number(b.value);
+    //       }, 0) / 1000000000000000000
+    //     );
+    //   });
+    //   let maxCreditScore = 0;
+    //   for (let i = 0; i < pBalance.length; i++) {
+    //     let pCreditScore =
+    //       Math.floor(
+    //         0.25 * 0.4 * pBalance[i] +
+    //           0.35 *
+    //             (0.3 * pAgeAddress[i] +
+    //               0.3 * pNumTransaction[i] +
+    //               0.4 * pValueTransaction[i])
+    //       ) + 150;
+    //     console.log(pCreditScore);
+    //     maxCreditScore = Math.max(maxCreditScore, pCreditScore);
+    //   }
+    //   console.log(maxCreditScore);
+    //   // setCreditScore(maxCreditScore);
+    // }
+    setLoading(false);
   };
 
   const mappingCreditScore = (input) => {
@@ -583,7 +946,7 @@ export default function Statistic() {
                 })}
               </Select>
             </FormControl>
-            {/* {dataSelected.length > 0 && (
+            {dataSelected.length > 0 && (
               <Button
                 variant="outlined"
                 sx={{ mt: 2, mb: 3, height: 56 }}
@@ -591,7 +954,7 @@ export default function Statistic() {
               >
                 Credit Score
               </Button>
-            )} */}
+            )}
             {loading && (
               <Box sx={{ display: "flex" }}>
                 <CircularProgress />
@@ -613,62 +976,108 @@ export default function Statistic() {
       </Grid>
 
       <Grid item xs={6}>
-        <Card sx={{ minWidth: 275, border: 0.5 }}>
-          <CardContent>
-            <Typography
-              sx={{ fontSize: 14 }}
-              color="text.secondary"
-              gutterBottom
-            >
-              {loading ? "Analyzing..." : "Credit Score Estimator"}
-            </Typography>
-            <Typography variant="h5" component="div">
-              Score: {creditScore.current}
-            </Typography>
-            <Typography sx={{ mb: 1.5 }} color="text.secondary">
-              {mappingCreditScore(creditScore.current)}
-            </Typography>
-            <Typography variant="body2">
-              Credit scores are based on your credit history and can play a
-              significant role in the type of loan and loan terms, such as
-              interest rate, a lender may offer you.
-              {/* <br />
+        <Card
+          sx={{
+            minWidth: 275,
+            border: "1px solid rgba(0, 0, 0, 0.25)",
+            width: "100%",
+            height: 366,
+            display: "flex",
+            marginBottom: 3.8,
+            justifyContent: "center",
+            // marginLeft: 7,
+          }}
+        >
+          <Box
+            sx={{
+              marginLeft: 1.3,
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+            }}
+          >
+            <CardContent>
+              <Typography
+                sx={{ fontSize: 14 }}
+                color="text.secondary"
+                gutterBottom
+              >
+                {loading ? "Analyzing..." : "Credit Score Estimator"}
+              </Typography>
+              <Typography variant="h4" component="div">
+                Score: {creditScore.current}
+              </Typography>
+              <Typography sx={{ mb: 1.5 }} color="text.secondary">
+                {mappingCreditScore(creditScore.current)}
+              </Typography>
+              <Typography variant="body1" align="justify">
+                A credit score is a number between 300 and 900 that depicts a
+                consumer's creditworthiness. Credit scores are based on your
+                credit history and can play a significant role in the type of
+                loan and loan terms, such as interest rate, a lender may offer
+                you. dfasdf
+                {/* <br />
               {'"a benevolent smile"'} */}
-            </Typography>
-          </CardContent>
-          <CardActions>
-            <Button
-              size="small"
-              onClick={() => {
-                window.open(
-                  "https://www.investopedia.com/terms/c/credit_score.asp",
-                  "_blank"
-                );
-              }}
-            >
-              Learn More
-            </Button>
-          </CardActions>
+              </Typography>
+              {/* <Typography variant="body1" sx={{ mt: 2 }}>
+                Your credit score is one number that can cost or save you a lot
+                of money in your lifetime. An excellent score can land you lower
+                interest rates, meaning you will pay less for any line of credit
+                you take out. But it's up to you, the borrower, to make sure
+                your credit remains strong so you can have access to more
+                opportunities to borrow if you need to.
+              </Typography> */}
+            </CardContent>
+            <CardActions>
+              <Button
+                size="small"
+                onClick={() => {
+                  window.open(
+                    "https://www.investopedia.com/terms/c/credit_score.asp",
+                    "_blank"
+                  );
+                }}
+              >
+                Learn More
+              </Button>
+            </CardActions>
+          </Box>
+          <Box>
+            <img
+              src="credit-score.png"
+              loading="lazy"
+              alt="Credit score"
+              width="100%"
+            />
+          </Box>
         </Card>
       </Grid>
 
       <Grid item xs={6}>
-        <img
-          src="credit-score.png"
-          alt=""
-          loading="lazy"
-          // height="500"
-          width="100%"
-        />
+        <Bar options={optionBar} data={dataBar} />
       </Grid>
       {dataSelected.length > 0 && (
-        <Grid item xs={6}>
-          <Pie options={optionPieTransaction} data={dataPieTransaction} />
+        <Grid item xs={3}>
+          <Box
+            sx={{
+              width: "100%",
+              height: "100%",
+            }}
+          >
+            <Pie options={optionPieTransaction} data={dataPieTransaction} />
+          </Box>
         </Grid>
       )}
       {dataSelected.length > 0 && (
-        <Grid item xs={6}>
-          <Pie options={optionPieBalance} data={dataPieBalance} />
+        <Grid item xs={3}>
+          <Box
+            sx={{
+              width: "100%",
+              height: "100%",
+            }}
+          >
+            <Pie options={optionPieBalance} data={dataPieBalance} />
+          </Box>
         </Grid>
       )}
 
@@ -679,7 +1088,7 @@ export default function Statistic() {
       )} */}
 
       {dataSelected.length > 0 && (
-        <Grid item xs={12}>
+        <Grid item xs={6}>
           <Line options={optionLine} data={dataLine} />
         </Grid>
       )}

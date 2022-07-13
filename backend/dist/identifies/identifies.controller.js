@@ -17,7 +17,6 @@ const common_1 = require("@nestjs/common");
 const create_address_dto_1 = require("../addresses/dto/create-address.dto");
 const create_identify_dto_1 = require("./dto/create-identify.dto");
 const update_identify_dto_1 = require("./dto/update-identify.dto");
-const identifies_service_1 = require("./identifies.service");
 let IdentifiesController = class IdentifiesController {
     constructor(identifiesService) {
         this.identifiesService = identifiesService;
@@ -74,7 +73,7 @@ __decorate([
 ], IdentifiesController.prototype, "update", null);
 IdentifiesController = __decorate([
     (0, common_1.Controller)('identifies'),
-    __metadata("design:paramtypes", [identifies_service_1.IdentifiesService])
+    __metadata("design:paramtypes", [Object])
 ], IdentifiesController);
 exports.IdentifiesController = IdentifiesController;
 //# sourceMappingURL=identifies.controller.js.map

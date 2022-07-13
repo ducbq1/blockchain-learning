@@ -12,7 +12,7 @@ const users_service_1 = require("./users.service");
 const users_controller_1 = require("./users.controller");
 const typeorm_1 = require("@nestjs/typeorm");
 const user_entity_1 = require("./entities/user.entity");
-const identify_entity_1 = require("../identifies/entities/identify.entity");
+const identify_entity_1 = require("src/identifies/entities/identify.entity");
 let UsersModule = class UsersModule {
 };
 UsersModule = __decorate([

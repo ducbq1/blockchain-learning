@@ -11,7 +11,6 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Transaction = void 0;
 const address_entity_1 = require("../../addresses/entities/address.entity");
-const identify_entity_1 = require("../../identifies/entities/identify.entity");
 const wallet_entity_1 = require("../../wallets/entities/wallet.entity");
 const typeorm_1 = require("typeorm");
 let Transaction = class Transaction {

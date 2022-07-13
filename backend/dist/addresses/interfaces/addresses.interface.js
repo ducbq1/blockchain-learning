@@ -1,4 +1,5 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const identify_entity_1 = require("../../identifies/entities/identify.entity");
+exports.Addresses = void 0;
+exports.Addresses = Symbol('Addresses');
 //# sourceMappingURL=addresses.interface.js.map

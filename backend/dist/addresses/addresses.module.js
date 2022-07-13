@@ -12,7 +12,6 @@ const addresses_service_1 = require("./addresses.service");
 const addresses_controller_1 = require("./addresses.controller");
 const typeorm_1 = require("@nestjs/typeorm");
 const address_entity_1 = require("./entities/address.entity");
-const identify_entity_1 = require("../identifies/entities/identify.entity");
 const transaction_entity_1 = require("../transactions/entities/transaction.entity");
 const wallet_entity_1 = require("../wallets/entities/wallet.entity");
 let AddressesModule = class AddressesModule {

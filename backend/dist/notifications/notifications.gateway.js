@@ -21,59 +21,49 @@ let NotificationsGateway = class NotificationsGateway {
     constructor(notificationsService) {
         this.notificationsService = notificationsService;
         this.logger = new common_1.Logger('NotificationGateway');
-        this.currentUser = 0;
+        this.currentUser = {};
     }
     afterInit() {
         this.logger.log('Initialized!');
     }
     handleConnection(client) {
-        this.currentUser++;
-        client.emit('API', 'Hello');
+        this.currentUser[client.id] = true;
         this.logger.log(`Connected: ${client.id}`);
+        this.wss.emit('getUserActiveCount', {
+            count: Object.keys(this.currentUser).length,
+        });
     }
     handleDisconnect(client) {
-        this.currentUser--;
+        delete this.currentUser[client.id];
         this.logger.log(`Disconnected: ${client.id}`);
-    }
-    findAll() {
-        return this.notificationsService.findAll();
-    }
-    findOne(id) {
-        return this.notificationsService.findOne(id);
-    }
-    remove(id) {
-        return this.notificationsService.remove(id);
+        this.wss.emit('getUserActiveCount', {
+            count: Object.keys(this.currentUser).length,
+        });
     }
     handleMessage(client, data) {
+        this.logger.log(`Message to server: ${client.id}`);
         return { event: 'messageToServer', data: data };
+    }
+    sendToAll(message) {
+        this.wss.emit('alert', { type: 'alert', message: message });
     }
 };
 __decorate([
     (0, websockets_1.WebSocketServer)(),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
-    __metadata("design:returntype", void 0)
-], NotificationsGateway.prototype, "afterInit", null);
+    __metadata("design:type", socket_io_1.Server)
+], NotificationsGateway.prototype, "wss", void 0);
 __decorate([
-    (0, websockets_1.SubscribeMessage)('findAllNotifications'),
+    (0, websockets_1.SubscribeMessage)('connect'),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [socket_io_1.Socket]),
     __metadata("design:returntype", void 0)
-], NotificationsGateway.prototype, "findAll", null);
+], NotificationsGateway.prototype, "handleConnection", null);
 __decorate([
-    (0, websockets_1.SubscribeMessage)('findOneNotification'),
-    __param(0, (0, websockets_1.MessageBody)()),
+    (0, websockets_1.SubscribeMessage)('disconnect'),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
+    __metadata("design:paramtypes", [socket_io_1.Socket]),
     __metadata("design:returntype", void 0)
-], NotificationsGateway.prototype, "findOne", null);
-__decorate([
-    (0, websockets_1.SubscribeMessage)('removeNotification'),
-    __param(0, (0, websockets_1.MessageBody)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
-    __metadata("design:returntype", void 0)
-], NotificationsGateway.prototype, "remove", null);
+], NotificationsGateway.prototype, "handleDisconnect", null);
 __decorate([
     (0, websockets_1.SubscribeMessage)('messageToServer'),
     __param(0, (0, websockets_1.ConnectedSocket)()),

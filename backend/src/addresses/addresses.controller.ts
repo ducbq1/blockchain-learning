@@ -12,6 +12,7 @@ import {
   Put,
 } from '@nestjs/common';
 import { AddressesService } from './addresses.service';
+import { Addresses } from './interfaces/addresses.interface';
 import { CreateAddressDto } from './dto/create-address.dto';
 import { UpdateAddressDto } from './dto/update-address.dto';
 

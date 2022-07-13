@@ -15,8 +15,8 @@ import PageviewIcon from "@mui/icons-material/Pageview";
 import GppMaybeIcon from "@mui/icons-material/GppMaybe";
 import GppGoodIcon from "@mui/icons-material/GppGood";
 import Web3 from "web3";
-import { abiFactory } from "../contracts/Factory";
-import { abiOwnerManager } from "../contracts/OwnerManager";
+import { OwnerManagerFactory } from "../contracts/OwnerManagerFactory";
+import { OwnerManager } from "../contracts/OwnerManager";
 import LinearProgress from "@mui/material/LinearProgress";
 import Stack from "@mui/material/Stack";
 import Slide from "@mui/material/Slide";
@@ -39,7 +39,7 @@ import TripOriginIcon from "@mui/icons-material/TripOrigin";
 
 const web3 = new Web3(Web3.givenProvider || "ws://localhost:8545");
 const initContract = (addr: string) =>
-  new web3.eth.Contract(abiOwnerManager as any[], addr);
+  new web3.eth.Contract(OwnerManager as any[], addr);
 
 export default function Manager() {
   const REMOVE_OWNER = "Remove Owner";
@@ -108,7 +108,7 @@ export default function Manager() {
             color="primary"
             onClick={() => {
               window.open(
-                `https://ropsten.etherscan.io/address/${params.row.address}`
+                `https://kovan.etherscan.io/address/${params.row.address}`
               );
             }}
           />
@@ -997,8 +997,8 @@ export default function Manager() {
           {dataSelected.length > 0 && (
             <Tooltip title={tooltip}>
               <TextField
-                sx={{ marginLeft: 0.5, width: 70 }}
-                disabled
+                sx={{ marginLeft: -15, width: 70 }}
+                // disabled
                 id="outlined-disabled"
                 // label="Disabled"
                 value={`${require} / ${rowsOwners.length}`}
@@ -1013,7 +1013,7 @@ export default function Manager() {
             style={{ transformOrigin: "0 0 0" }}
             {...(loading ? { timeout: 1000 } : {})}
           >
-            <Stack sx={{ width: "20%", color: "grey.500" }} spacing={2}>
+            <Stack sx={{ width: "40%", color: "grey.500" }} spacing={2}>
               <LinearProgress color="secondary" />
               <LinearProgress color="success" />
               <LinearProgress color="inherit" />
@@ -1052,7 +1052,7 @@ export default function Manager() {
           justifyContent="space-between"
           alignItems="center"
         >
-          <Typography sx={{ fontStyle: "italic" }}>Owners</Typography>
+          <Typography>Owners</Typography>
           {/* <Box sx={{ width: "90%" }}>
             {loadingTable && <LinearProgress value={progress} />}
           </Box> */}
@@ -1076,7 +1076,7 @@ export default function Manager() {
           justifyContent="space-between"
           alignItems="center"
         >
-          <Typography sx={{ fontStyle: "italic" }}>Transactions</Typography>
+          <Typography>Transactions</Typography>
           <Box sx={{ width: "90%" }}>{loadingTable && <LinearProgress />}</Box>
         </Stack>
       </Grid>

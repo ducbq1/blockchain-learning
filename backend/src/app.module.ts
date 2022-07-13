@@ -3,13 +3,9 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { getConnectionOptions, Connection } from 'typeorm';
-import { UsersModule } from './users/users.module';
-import { IdentifiesModule } from './identifies/identifies.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { AddressesModule } from './addresses/addresses.module';
 import { ValidateMiddleware } from './validate.middleware';
-import { StatisticModule } from './statistic/statistic.module';
-import { BooksModule } from './books/books.module';
 import { WalletsModule } from './wallets/wallets.module';
 import { TransactionsModule } from './transactions/transactions.module';
 
@@ -23,10 +19,9 @@ import { TransactionsModule } from './transactions/transactions.module';
     }),
     // UsersModule,
     // IdentifiesModule,
-    // NotificationsModule,
+    NotificationsModule,
     AddressesModule,
     // StatisticModule,
-    BooksModule,
     WalletsModule,
     TransactionsModule,
   ],

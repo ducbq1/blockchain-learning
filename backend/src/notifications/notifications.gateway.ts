@@ -11,44 +11,45 @@ import {
 } from '@nestjs/websockets';
 import { NotificationsService } from './notifications.service';
 import { Logger } from '@nestjs/common';
-import { Socket } from 'socket.io';
+import { Server, Socket } from 'socket.io';
 
+// @WebSocketGateway(4001, {
+//   cors: true,
+//   path: '/websockets',
+//   serveClient: true,
+//   namespace: '/',
+// })
 @WebSocketGateway({ cors: true })
 export class NotificationsGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
   private logger: Logger = new Logger('NotificationGateway');
-  private currentUser = 0;
+  private currentUser = {};
   constructor(private readonly notificationsService: NotificationsService) {}
 
-  @WebSocketServer()
+  @WebSocketServer() wss: Server;
+
   afterInit() {
     this.logger.log('Initialized!');
   }
 
+  @SubscribeMessage('connect')
   handleConnection(client: Socket) {
-    this.currentUser++;
-    client.emit('API', 'Hello');
+    // client.to('...').emit('');
+    this.currentUser[client.id] = true;
     this.logger.log(`Connected: ${client.id}`);
+    this.wss.emit('getUserActiveCount', {
+      count: Object.keys(this.currentUser).length,
+    });
   }
+
+  @SubscribeMessage('disconnect')
   handleDisconnect(client: Socket) {
-    this.currentUser--;
+    delete this.currentUser[client.id];
     this.logger.log(`Disconnected: ${client.id}`);
-  }
-
-  @SubscribeMessage('findAllNotifications')
-  findAll() {
-    return this.notificationsService.findAll();
-  }
-
-  @SubscribeMessage('findOneNotification')
-  findOne(@MessageBody() id: number) {
-    return this.notificationsService.findOne(id);
-  }
-
-  @SubscribeMessage('removeNotification')
-  remove(@MessageBody() id: number) {
-    return this.notificationsService.remove(id);
+    this.wss.emit('getUserActiveCount', {
+      count: Object.keys(this.currentUser).length,
+    });
   }
 
   @SubscribeMessage('messageToServer')
@@ -56,6 +57,11 @@ export class NotificationsGateway
     @ConnectedSocket() client: Socket,
     @MessageBody() data: string,
   ): WsResponse<string> {
+    this.logger.log(`Message to server: ${client.id}`);
     return { event: 'messageToServer', data: data };
+  }
+
+  sendToAll(message: string) {
+    this.wss.emit('alert', { type: 'alert', message: message });
   }
 }

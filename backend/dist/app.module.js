@@ -15,9 +15,9 @@ const app_controller_1 = require("./app.controller");
 const app_service_1 = require("./app.service");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
+const notifications_module_1 = require("./notifications/notifications.module");
 const addresses_module_1 = require("./addresses/addresses.module");
 const validate_middleware_1 = require("./validate.middleware");
-const books_module_1 = require("./books/books.module");
 const wallets_module_1 = require("./wallets/wallets.module");
 const transactions_module_1 = require("./transactions/transactions.module");
 let AppModule = class AppModule {
@@ -38,8 +38,8 @@ AppModule = __decorate([
                     autoLoadEntities: true,
                 }),
             }),
+            notifications_module_1.NotificationsModule,
             addresses_module_1.AddressesModule,
-            books_module_1.BooksModule,
             wallets_module_1.WalletsModule,
             transactions_module_1.TransactionsModule,
         ],

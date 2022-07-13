@@ -1,5 +1,4 @@
 import { Address } from 'src/addresses/entities/address.entity';
-import { Identify } from 'src/identifies/entities/identify.entity';
 import { Wallet } from 'src/wallets/entities/wallet.entity';
 import {
   Entity,

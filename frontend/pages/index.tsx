@@ -16,7 +16,8 @@ import {
   Divider,
 } from "@mui/material";
 import { randomBytes } from "crypto";
-import GridIndex from "../components/GridIndex";
+import IndexGrid from "../components/IndexGrid";
+import Import from "../components/Import";
 import Manager from "../components/Manager";
 import MetaMaskOnboarding from "@metamask/onboarding";
 import Web3 from "web3";
@@ -35,10 +36,10 @@ import PageviewIcon from "@mui/icons-material/Pageview";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import IosShareIcon from "@mui/icons-material/IosShare";
 import Tooltip from "@mui/material/Tooltip";
-import { abiFactory } from "../contracts/Factory";
 import { StoreContext } from "../store";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { useRouter } from "next/router";
+import SocketIOClient from "socket.io-client";
 
 import {
   ONBOARD_TEXT,
@@ -72,6 +73,7 @@ interface TabPanelProps {
   children?: React.ReactNode;
   index: number;
   value: number;
+  callBack: any;
 }
 
 declare global {
@@ -82,19 +84,6 @@ declare global {
 
 // const initContract = (addr: string) => new web3.eth.Contract(ChainIdentification.abi as any[], addr)
 // const myContract = initContract("0xe7292a0ce6cb4bc958d4d1311dd5aae872156265");
-// const newSocket = io(`http://${window.location.hostname}:4000/notifications`);
-
-function TabPanel(props: TabPanelProps) {
-  const { children, value, index, ...other } = props;
-  return (
-    <>
-      {value === 0 && <GridIndex />}
-      {value === 1 && <Statistic />}
-      {value === 2 && <Manager />}
-      {value === 3 && <AddressBook />}
-    </>
-  );
-}
 
 function a11yProps(index: number) {
   return {
@@ -103,10 +92,22 @@ function a11yProps(index: number) {
   };
 }
 
+function TabPanel(props: TabPanelProps) {
+  const { children, value, index, callBack, ...other } = props;
+  return (
+    <>
+      {value === 0 && <Import handleChangeTab={callBack} />}
+      {value === 1 && <Statistic />}
+      {value === 2 && <Manager />}
+      {value === 3 && <AddressBook />}
+    </>
+  );
+}
+
 // const messageVerify = "0x" + randomBytes(32).toString("hex");
 const web3 = new Web3(Web3.givenProvider || "ws://localhost:8545");
-const initContract = (addr: string) =>
-  new web3.eth.Contract(abiFactory as any[], addr);
+// const initContract = (addr: string) =>
+//   new web3.eth.Contract(abiFactory as any[], addr);
 
 export default function Index() {
   const router = useRouter();
@@ -128,6 +129,7 @@ export default function Index() {
   const [value, setValue] = React.useState(0);
   const [loading, setLoading] = React.useState(false);
   const [balance, setBalance] = React.useState(0);
+  const [userActiveCount, setUserActiveCount] = React.useState(0);
   const [networkType, setNetworkType] = React.useState("");
 
   // web3.eth.net.getId().then(console.log);
@@ -138,10 +140,23 @@ export default function Index() {
   const [openModal, setOpenModal] = React.useState(false);
   const [copyText, setCopyText] = React.useState("Copy");
 
-  React.useEffect(() => {
+  React.useEffect((): any => {
     if (!onboarding.current) {
       onboarding.current = new MetaMaskOnboarding();
     }
+    // const socket = SocketIOClient(`http://${window.location.hostname}:4001`, {
+    //   path: "/websockets",
+    // });
+    const socket = SocketIOClient(`http://${window.location.hostname}:4000`);
+    socket.on("connect", () => {
+      console.log("SOCKET CONNECTED!", socket.id);
+    });
+
+    socket.on("getUserActiveCount", ({ count }) => {
+      console.log(count);
+      setUserActiveCount(count);
+    });
+    // if (socket) return () => socket.disconnect();
   }, []);
 
   React.useEffect(() => {
@@ -330,7 +345,7 @@ export default function Index() {
     */
   }
 
-  const handleChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleChangeTab = (event: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
   };
 
@@ -339,33 +354,39 @@ export default function Index() {
   // };
 
   return (
-    <>
+    <div style={{ marginLeft: 10, marginRight: 10 }}>
       <Head>
         <title>Identification</title>
       </Head>
-      <Container maxWidth="lg">
-        <AppBar position="static">
-          <Toolbar>
-            <IconButton
-              size="large"
-              edge="start"
-              color="inherit"
-              aria-label="menu"
-              sx={{ mr: 2 }}
-              onClick={() => {
-                // window.location.href = `http://${window.location.hostname}:3000`;
-                router.push(`/`);
-              }}
-            >
-              <CardTravelIcon />
-            </IconButton>
-            <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-              Balance: {balance.toPrecision(5)} ETH
+      {/* <Container maxWidth="lg"> */}
+      <AppBar position="static">
+        <Toolbar>
+          <IconButton
+            size="large"
+            edge="start"
+            color="inherit"
+            aria-label="menu"
+            sx={{ mr: 2 }}
+            onClick={() => {
+              // window.location.href = `http://${window.location.hostname}:3000`;
+              router.push(`/`);
+            }}
+          >
+            <CardTravelIcon />
+          </IconButton>
+
+          <Stack sx={{ flexGrow: 1, my: 1.5 }}>
+            <Typography>
+              {networkType} - {balance.toPrecision(5)} ETH
             </Typography>
-            <Typography variant="h6" component="div" sx={{ flexGrow: 8 }}>
-              {networkType}
+            <Typography sx={{ flexGrow: 3 }}>
+              Active Current: {userActiveCount}
             </Typography>
-            {/* <LoadingButton
+          </Stack>
+          {/* <Typography variant="h6" component="div" sx={{ flexGrow: 8 }}>
+            {networkType}
+          </Typography> */}
+          {/* <LoadingButton
               color="inherit"
               onClick={onDisconnect}
               startIcon={<ExitToAppIcon />}
@@ -375,24 +396,24 @@ export default function Index() {
               Disconnect
             </LoadingButton> */}
 
-            <LoadingButton
-              color="inherit"
-              onClick={onConnect}
-              startIcon={<AccountBalanceWalletIcon />}
-              loading={loading}
-              loadingPosition="start"
-            >
-              <Stack alignItems="flex-start">
-                <Typography variant="caption">
-                  <FiberManualRecordIcon sx={{ fontSize: 10 }} /> {buttonText}
-                </Typography>
-                <Typography variant="button">{buttonTextAddress}</Typography>
-              </Stack>
-            </LoadingButton>
-          </Toolbar>
-        </AppBar>
-        <Box sx={{ borderBottom: 1, borderColor: "divider", my: 2 }}>
-          {/* <TextField
+          <LoadingButton
+            color="inherit"
+            onClick={onConnect}
+            startIcon={<AccountBalanceWalletIcon />}
+            loading={loading}
+            loadingPosition="start"
+          >
+            <Stack alignItems="flex-start">
+              <Typography variant="caption">
+                <FiberManualRecordIcon sx={{ fontSize: 10 }} /> {buttonText}
+              </Typography>
+              <Typography variant="button">{buttonTextAddress}</Typography>
+            </Stack>
+          </LoadingButton>
+        </Toolbar>
+      </AppBar>
+      <Box sx={{ borderBottom: 1, borderColor: "divider", my: 2 }}>
+        {/* <TextField
             id="outlined-basic"
             label="Message"
             variant="outlined"
@@ -401,80 +422,78 @@ export default function Index() {
             onChange={handleMessage}
             inputProps={{ maxLength: 66 }}
           /> */}
-          <Tabs
-            value={value}
-            onChange={handleChange}
-            aria-label="basic tabs example"
-            textColor="secondary"
-          >
-            <Tab label="identification" {...a11yProps(0)} />
-            <Tab label="statistic" {...a11yProps(1)} />
-            <Tab label="asset manager" {...a11yProps(2)} />
-            <Tab label="address book" {...a11yProps(3)} />
-          </Tabs>
-        </Box>
-        <TabPanel value={value} index={0} />
-        <Modal open={openModal} onClose={() => setOpenModal(false)}>
-          <Box sx={style}>
-            <Stack>
-              <Typography variant="h5" sx={{ mb: 1 }}>
-                Wallet Connection
+        <Tabs
+          value={value}
+          onChange={handleChangeTab}
+          aria-label="basic tabs example"
+          textColor="secondary"
+        >
+          <Tab label="identification" {...a11yProps(0)} />
+          <Tab label="statistic" {...a11yProps(1)} />
+          <Tab label="asset manager" {...a11yProps(2)} />
+          <Tab label="address book" {...a11yProps(3)} />
+        </Tabs>
+      </Box>
+      <TabPanel value={value} index={0} callBack={handleChangeTab} />
+      <Modal open={openModal} onClose={() => setOpenModal(false)}>
+        <Box sx={style}>
+          <Stack>
+            <Typography variant="h5" sx={{ mb: 1 }}>
+              Wallet Connection
+            </Typography>
+            <Divider />
+            <Stack
+              sx={{ my: 2 }}
+              direction="row"
+              spacing={0}
+              alignItems="center"
+            >
+              <Typography variant="h6" component="h2">
+                {accounts[0]}
               </Typography>
-              <Divider />
-              <Stack
-                sx={{ my: 2 }}
-                direction="row"
-                spacing={0}
-                alignItems="center"
-              >
-                <Typography variant="h6" component="h2">
-                  {accounts[0]}
-                </Typography>
-                <Tooltip title={copyText} placement="top">
-                  <IconButton
-                    onClick={() => {
-                      navigator.clipboard.writeText(accounts[0]);
-                      setCopyText("Copied");
-                      setTimeout(() => {
-                        setCopyText("Copy");
-                      }, 1000);
-                    }}
-                    size="medium"
-                    // color="primary"
-                    component="span"
-                  >
-                    <ContentCopyIcon />
-                  </IconButton>
-                </Tooltip>
-              </Stack>
-              <Stack direction="row" spacing={2} justifyContent="space-between">
-                <Link
-                  href={`https://ropsten.etherscan.io/address/${accounts[0]}`}
+              <Tooltip title={copyText} placement="top">
+                <IconButton
+                  onClick={() => {
+                    navigator.clipboard.writeText(accounts[0]);
+                    setCopyText("Copied");
+                    setTimeout(() => {
+                      setCopyText("Copy");
+                    }, 1000);
+                  }}
+                  size="medium"
+                  // color="primary"
+                  component="span"
                 >
-                  <a
-                    target="_blank"
-                    style={{
-                      textDecoration: "none",
-                      display: "flex",
-                      alignItems: "center",
-                    }}
-                  >
-                    <Typography>View on Etherscan</Typography>&nbsp;
-                    <OpenInNewIcon sx={{ fontSize: 18 }} />
-                  </a>
-                </Link>
-                <Button
-                  sx={{ height: 35 }}
-                  variant="outlined"
-                  onClick={onDisconnect}
-                >
-                  {DISCONNECT}
-                </Button>
-              </Stack>
+                  <ContentCopyIcon />
+                </IconButton>
+              </Tooltip>
             </Stack>
-          </Box>
-        </Modal>
-      </Container>
-    </>
+            <Stack direction="row" spacing={2} justifyContent="space-between">
+              <Link href={`https://kovan.etherscan.io/address/${accounts[0]}`}>
+                <a
+                  target="_blank"
+                  style={{
+                    textDecoration: "none",
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                >
+                  <Typography>View on Etherscan</Typography>&nbsp;
+                  <OpenInNewIcon sx={{ fontSize: 18 }} />
+                </a>
+              </Link>
+              <Button
+                sx={{ height: 35 }}
+                variant="outlined"
+                onClick={onDisconnect}
+              >
+                {DISCONNECT}
+              </Button>
+            </Stack>
+          </Stack>
+        </Box>
+      </Modal>
+      {/* </Container> */}
+    </div>
   );
 }

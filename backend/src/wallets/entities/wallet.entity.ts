@@ -1,5 +1,4 @@
 import { Address } from 'src/addresses/entities/address.entity';
-import { Book } from 'src/books/entities/book.entity';
 import { Transaction } from 'src/transactions/entities/transaction.entity';
 import {
   Entity,
@@ -33,9 +32,6 @@ export class Wallet {
 
   @DeleteDateColumn()
   deletedAt?: Date;
-
-  @OneToMany(() => Book, (book) => book.wallet)
-  books: Book[];
 
   @OneToMany(() => Transaction, (transaction) => transaction.wallet)
   transactions: Transaction[];

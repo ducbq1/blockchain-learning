@@ -15,7 +15,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AddressesService = void 0;
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
-const identify_entity_1 = require("../identifies/entities/identify.entity");
 const transaction_entity_1 = require("../transactions/entities/transaction.entity");
 const wallet_entity_1 = require("../wallets/entities/wallet.entity");
 const typeorm_2 = require("typeorm");
@@ -25,6 +24,12 @@ let AddressesService = class AddressesService {
         this.addressesRepository = addressesRepository;
         this.transactionsRepository = transactionsRepository;
         this.walletsRepository = walletsRepository;
+    }
+    findAll(sort) {
+        throw new Error('Method not implemented.');
+    }
+    create(createAddressDto) {
+        throw new Error('Method not implemented.');
     }
     async findAllAddressTransaction(uuid) {
         const transactionInstance = await this.transactionsRepository.findOne({
