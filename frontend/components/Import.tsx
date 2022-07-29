@@ -100,7 +100,7 @@ export default function Import(props: { handleChangeTab }) {
   const [isExist, setIsExist] = React.useState(false);
   const [openAddressList, setOpenAddressList] = React.useState(false);
 
-  const [require, setRequire] = React.useState("");
+  const [require, setRequire] = React.useState("0");
 
   const handleChange = (event: SelectChangeEvent) => {
     setRequire(event.target.value as string);
@@ -134,9 +134,33 @@ export default function Import(props: { handleChangeTab }) {
 
         setSignature(addressInstance.data.map((item) => item.signature));
         setRequire(addressInstance.data.length.toString());
+      } else {
+        if (address.every((element) => element.account != accounts[0])) {
+          setAddress([
+            ...address,
+            {
+              account: accounts[0],
+              status: 0,
+              index: address.length,
+            },
+          ]);
+        }
       }
     }
   };
+
+  React.useEffect(() => {
+    const listener = async (event) => {
+      if (event.code === "Enter" || event.code === "NumpadEnter") {
+        event.preventDefault();
+        await handleCheck();
+      }
+    };
+    document.addEventListener("keydown", listener);
+    return () => {
+      document.removeEventListener("keydown", listener);
+    };
+  }, []);
 
   React.useEffect(() => {
     const check =
@@ -152,9 +176,10 @@ export default function Import(props: { handleChangeTab }) {
   }, [address, signature]);
 
   const handleConfirm = async () => {
+    const messageSign = [MESSAGE_SIGN, nameIdentify].join("\n\n");
     const sign = await window.ethereum.request({
       method: "personal_sign",
-      params: [nameIdentify, accounts[0]],
+      params: [messageSign, accounts[0]],
     });
 
     address.forEach((item, index) => {
@@ -220,8 +245,10 @@ export default function Import(props: { handleChangeTab }) {
     );
     const addressList = address.map((item) => item.account);
 
+    const messageSign = [MESSAGE_SIGN, nameIdentify].join("\n\n");
+
     ownerManagerFactoryContract.methods
-      .create(nameIdentify, addressList, signature, require)
+      .create(messageSign, addressList, signature, require)
       .send({ from: accounts[0] })
       .on("error", (error, receipt) => {
         setOpenAlert(true);
@@ -270,7 +297,7 @@ export default function Import(props: { handleChangeTab }) {
         let key = index;
         setAddress(address.filter((item, index) => index != key));
         setSignature(signature.filter((item, index) => index != key));
-        setRequire(address.length.toString());
+        setRequire((address.length - 1).toString());
       }
     });
   };
@@ -501,8 +528,12 @@ export default function Import(props: { handleChangeTab }) {
                   id="demo-simple-select"
                   value={require}
                   label="Requires"
+                  disabled={require == "0"}
                   onChange={handleChange}
                 >
+                  <MenuItem key="0" value="0" disabled>
+                    N/A
+                  </MenuItem>
                   {address
                     .filter((item) => item.status == 1)
                     .map((element, index) => {

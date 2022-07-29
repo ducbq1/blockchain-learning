@@ -41,7 +41,7 @@ const web3 = new Web3(Web3.givenProvider || "ws://localhost:8545");
 const initContract = (addr: string) =>
   new web3.eth.Contract(OwnerManager as any[], addr);
 
-export default function Manager() {
+export default function Management() {
   const REMOVE_OWNER = "Remove Owner";
   const ADD_OWNER = "Add Owner";
   const REPLACE_OWNER = "Replace Owner";

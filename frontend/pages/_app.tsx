@@ -1,4 +1,5 @@
 import "@fontsource/roboto/400.css";
+import "../styles/globals.css";
 import { AppProps } from "next/app";
 import Layout from "../components/Layout";
 import MyStore from "../store";

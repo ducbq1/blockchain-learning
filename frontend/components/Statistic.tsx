@@ -182,7 +182,7 @@ export default function Statistic() {
   const { accountContext, addressContext, signatureContext } =
     React.useContext(StoreContext);
   // const [creditScore, setCreditScore] = React.useState(300);
-  const creditScore = React.useRef(300);
+  const creditScore = React.useRef(0);
 
   const [accounts, setAccounts] = accountContext;
   const [loading, setLoading] = React.useState(false);
@@ -641,6 +641,8 @@ export default function Statistic() {
     // console.log(reserves);
     let maxCreditScore = 0;
     let numTxn = [];
+    let numLending = [];
+    let numLiquidation = [];
     let valueTxn = [];
     let ageOfAddress = [];
     let balance = [];
@@ -666,7 +668,7 @@ export default function Statistic() {
         .getUserAccountData(owner)
         .call();
 
-      console.log(userAccountData);
+      // console.log(userAccountData);
 
       balance[index] = web3.utils.fromWei(await web3.eth.getBalance(owner));
       totalLiquidity[index] = userAccountData.totalLiquidityETH;
@@ -699,16 +701,16 @@ export default function Statistic() {
         (Date.now() / 1e3 - Math.min(...listTimestamp)) / 3600 / 24
       ); // convert date now from milisecond to second
 
-      let RedeemUnderlying = await lendingPoolContract.getPastEvents(
-        "RedeemUnderlying",
-        {
-          filter: {
-            _user: owner,
-          },
-          fromBlock: "earliest",
-          toBlock: "latest",
-        }
-      );
+      // let RedeemUnderlying = await lendingPoolContract.getPastEvents(
+      //   "RedeemUnderlying",
+      //   {
+      //     filter: {
+      //       _user: owner,
+      //     },
+      //     fromBlock: "earliest",
+      //     toBlock: "latest",
+      //   }
+      // );
       let Borrow = await lendingPoolContract.getPastEvents("Borrow", {
         filter: {
           _user: owner,
@@ -749,11 +751,11 @@ export default function Statistic() {
           (previousValue: number, currentValue) => previousValue + currentValue,
           0 as number
         ) / 1e21;
-      let valueRedeemUnderlying =
-        RedeemUnderlying.map((n) => Number(n.returnValues["_amount"])).reduce(
-          (previousValue: number, currentValue) => previousValue + currentValue,
-          0 as number
-        ) / 1e21;
+      // let valueRedeemUnderlying =
+      //   RedeemUnderlying.map((n) => Number(n.returnValues["_amount"])).reduce(
+      //     (previousValue: number, currentValue) => previousValue + currentValue,
+      //     0 as number
+      //   ) / 1e21;
       let valueBorrow =
         Borrow.map((n) => Number(n.returnValues["_amount"])).reduce(
           (previousValue: number, currentValue) => previousValue + currentValue,
@@ -771,14 +773,16 @@ export default function Statistic() {
         ) /
           1e21;
 
+      numLending[index] = Deposit.length;
+      numLiquidation[index] = LiquidationCall.length;
+
       numTxn[index] =
         Deposit.length +
-        RedeemUnderlying.length +
+        // RedeemUnderlying.length +
         Borrow.length +
         Repay.length +
         LiquidationCall.length;
-      valueTxn[index] =
-        valueDeposit + valueRedeemUnderlying + valueBorrow + valueRepay;
+      valueTxn[index] = valueDeposit + valueBorrow + valueRepay;
 
       /**********************************
       currentATokenBalance[index] = await reserves.reduce(
@@ -797,51 +801,47 @@ export default function Statistic() {
     }
 
     for (let [index, owner] of owners.entries()) {
-      let totalAsset =
-        0.4 * balance[index] +
-        0.6 * (totalCollateral[index] - totalBorrow[index]);
+      let totalAsset = 0.4 * balance[index] + 0.6 * totalCollateral[index];
       let tempCreditScore = 0;
-      if (balance[index] == 0 || totalCollateral[index] == 0) {
-        tempCreditScore = 3;
+      if (
+        balance[index] == 0 ||
+        totalCollateral[index] == 0 ||
+        numTxn[index] == 0
+      ) {
+        tempCreditScore = 0.05;
       } else {
         if (totalBorrow[index] / balance[index] > 1) {
           tempCreditScore =
             0.25 * totalAsset +
             0.35 *
               (0.3 * ageOfAddress[index] +
-                0.4 * numTxn[index] +
-                0.3 * valueTxn[index]) +
+                0.4 * (numLiquidation[index] / numLending[index]) +
+                0.3 * (valueTxn[index] / numTxn[index])) +
             0.15 *
-              (0.6 * 1 +
-                0.4 *
-                  (totalBorrow[index] /
-                    (totalCollateral[index] - totalBorrow[index]))) +
-            0.25 * ((totalCollateral[index] - totalBorrow[index]) / totalAsset);
+              (0.6 * 1 + 0.4 * (totalBorrow[index] / totalCollateral[index])) +
+            0.25 * (totalCollateral[index] / totalAsset);
         } else {
           tempCreditScore =
             0.25 * totalAsset +
             0.35 *
               (0.3 * ageOfAddress[index] +
-                0.4 * numTxn[index] +
-                0.3 * valueTxn[index]) +
+                0.4 * (numLiquidation[index] / numLending[index]) +
+                0.3 * (valueTxn[index] / numTxn[index])) +
             0.15 *
               (0.6 * (totalBorrow[index] / balance[index]) +
-                0.4 *
-                  (totalBorrow[index] /
-                    (totalCollateral[index] - totalBorrow[index]))) +
-            0.25 * ((totalCollateral[index] - totalBorrow[index]) / totalAsset);
+                0.4 * (totalBorrow[index] / totalCollateral[index])) +
+            0.25 * (totalCollateral[index] / totalAsset);
         }
       }
 
       console.log(tempCreditScore);
       maxCreditScore = Math.max(maxCreditScore, tempCreditScore);
     }
-    creditScore.current = Math.floor(maxCreditScore * 100);
-
-    console.log(balance);
-    console.log(totalCollateral);
-    console.log(totalBorrow);
-    console.log(numTxn);
+    if (maxCreditScore + 300 > 900) {
+      creditScore.current = 900;
+    } else {
+      creditScore.current = Math.floor(maxCreditScore * 100) + 300;
+    }
 
     // console.log(balance);
     // console.log(currentATokenBalance);
@@ -946,7 +946,7 @@ export default function Statistic() {
                 })}
               </Select>
             </FormControl>
-            {dataSelected.length > 0 && (
+            {dataSelected.length > 0 && !loading && (
               <Button
                 variant="outlined"
                 sx={{ mt: 2, mb: 3, height: 56 }}
@@ -1004,12 +1004,15 @@ export default function Statistic() {
               >
                 {loading ? "Analyzing..." : "Credit Score Estimator"}
               </Typography>
+
               <Typography variant="h4" component="div">
                 Score: {creditScore.current}
               </Typography>
+
               <Typography sx={{ mb: 1.5 }} color="text.secondary">
                 {mappingCreditScore(creditScore.current)}
               </Typography>
+
               <Typography variant="body1" align="justify">
                 A credit score is a number between 300 and 900 that depicts a
                 consumer's creditworthiness. Credit scores are based on your

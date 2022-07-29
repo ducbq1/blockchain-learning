@@ -18,7 +18,7 @@ import {
 import { randomBytes } from "crypto";
 import IndexGrid from "../components/IndexGrid";
 import Import from "../components/Import";
-import Manager from "../components/Manager";
+import Manager from "../components/Management";
 import MetaMaskOnboarding from "@metamask/onboarding";
 import Web3 from "web3";
 import Link from "next/link";
@@ -153,7 +153,7 @@ export default function Index() {
     });
 
     socket.on("getUserActiveCount", ({ count }) => {
-      console.log(count);
+      // console.log(count);
       setUserActiveCount(count);
     });
     // if (socket) return () => socket.disconnect();
@@ -376,9 +376,11 @@ export default function Index() {
           </IconButton>
 
           <Stack sx={{ flexGrow: 1, my: 1.5 }}>
-            <Typography>
-              {networkType} - {balance.toPrecision(5)} ETH
-            </Typography>
+            {accounts[0] != null && (
+              <Typography>
+                {networkType} - {balance.toPrecision(5)} ETH
+              </Typography>
+            )}
             <Typography sx={{ flexGrow: 3 }}>
               Active Current: {userActiveCount}
             </Typography>
@@ -430,7 +432,7 @@ export default function Index() {
         >
           <Tab label="identification" {...a11yProps(0)} />
           <Tab label="statistic" {...a11yProps(1)} />
-          <Tab label="asset manager" {...a11yProps(2)} />
+          <Tab label="management" {...a11yProps(2)} />
           <Tab label="address book" {...a11yProps(3)} />
         </Tabs>
       </Box>
@@ -448,8 +450,10 @@ export default function Index() {
               spacing={0}
               alignItems="center"
             >
-              <Typography variant="h6" component="h2">
-                {accounts[0]}
+              <Typography variant="h5" component="h2">
+                {accounts[0] != null
+                  ? accounts[0].substring(0, 28).concat("...")
+                  : ""}
               </Typography>
               <Tooltip title={copyText} placement="top">
                 <IconButton

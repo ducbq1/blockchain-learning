@@ -12,7 +12,7 @@ export class WalletsService {
     private walletsRepository: Repository<Wallet>,
   ) {}
 
-  async create(createWalletDto: CreateWalletDto): Promise<CreateWalletDto> {
+  async create(createWalletDto: CreateWalletDto): Promise<Wallet> {
     return await this.walletsRepository.save(createWalletDto);
   }
 

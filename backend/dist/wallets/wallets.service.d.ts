@@ -5,7 +5,7 @@ import { Wallet } from './entities/wallet.entity';
 export declare class WalletsService {
     private walletsRepository;
     constructor(walletsRepository: Repository<Wallet>);
-    create(createWalletDto: CreateWalletDto): Promise<CreateWalletDto>;
+    create(createWalletDto: CreateWalletDto): Promise<Wallet>;
     findAll(): Promise<Wallet[]>;
     findOne(title: string): Promise<string>;
     check(title: string): Promise<boolean>;

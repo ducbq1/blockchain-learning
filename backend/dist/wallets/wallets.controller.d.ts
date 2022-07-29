@@ -4,7 +4,7 @@ import { UpdateWalletDto } from './dto/update-wallet.dto';
 export declare class WalletsController {
     private readonly walletsService;
     constructor(walletsService: WalletsService);
-    create(createWalletDto: CreateWalletDto): Promise<CreateWalletDto>;
+    create(createWalletDto: CreateWalletDto): Promise<import("./entities/wallet.entity").Wallet>;
     findAll(): Promise<import("./entities/wallet.entity").Wallet[]>;
     findOne(title: string): Promise<string>;
     check(title: string): Promise<boolean>;
